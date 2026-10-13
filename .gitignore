@@ -1,0 +1,62 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+
+# ---- 虚拟环境 ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- 测试与类型检查缓存 ----
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# ---- 本项目的生成物 ----
+# 生成的申请文件不入库：它们是产物，不是源码。
+# 真实案件的稿件也不该进公开仓库。
+out/
+output/
+outputs/*
+!outputs/.gitkeep
+*.docx
+*.doc
+~$*.docx
+
+# ---- 编辑器与操作系统 ----
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- AI 协作工作区 ----
+# 这里放的是本机的工作日志与协作约定，含本地绝对路径等信息。
+# 对使用本仓库的其他人没有价值，不入库。
+.workbuddy/
+
+# ---- 外部参考的第三方 skill 包 ----
+# 从压缩包解压出来的参考实现（约 2.6 万个文件，其中 2.5 万个是 node_modules），
+# 只作阅读参考。它们各有自己的 .git，留着会变成嵌套仓库。
+# 目录本身仍在磁盘上，需要时直接翻阅即可。
+.claude(2)/
+__MACOSX/
+
+# Local agent state and generated archives
+.agent/
+outputs.zip
