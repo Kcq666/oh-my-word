@@ -49,6 +49,10 @@ desktop.ini
 # 这里放的是本机的工作日志与协作约定，含本地绝对路径等信息。
 # 对使用本仓库的其他人没有价值，不入库。
 .workbuddy/
+.agent/
+outputs.zip
+private-corpus/
+eval-runs/
 
 # ---- 外部参考的第三方 skill 包 ----
 # 从压缩包解压出来的参考实现（约 2.6 万个文件，其中 2.5 万个是 node_modules），
@@ -56,7 +60,3 @@ desktop.ini
 # 目录本身仍在磁盘上，需要时直接翻阅即可。
 .claude(2)/
 __MACOSX/
-
-# Local agent state and generated archives
-.agent/
-outputs.zip

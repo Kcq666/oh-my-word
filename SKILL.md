@@ -65,4 +65,4 @@ python tools/patent.py handoff outputs/draft.md -o outputs/cnipa-handoff --facts
 
 交付稿件、审阅文件、事实账本、内容审查及需时的交接包；简要说明结果、验证和待确认事项。不要把内部证据标记写入正式申请正文。不自动提交，不保证受理或授权。状态与能力以本文件和 CLI 为准；docs 中历史设计仅供参考。
 
-维护本体系时运行 `python tools/check_skills.py` 检查本地结构，按 [行为评测协议](references/skill-evaluation.md) 验证触发与产物；结构通过不等于生成质量通过。
+维护本体系时运行 `python tools/check_skills.py` 检查本地结构，按 [行为评测协议](references/skill-evaluation.md) 验证触发与产物；结构通过不等于生成质量通过。模块登记、改稿接入、资料需求与评测执行见 [维护工具用法](docs/skills-maintenance.md)，仅维护或积累资料时读取。

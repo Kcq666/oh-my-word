@@ -7,10 +7,17 @@ from urllib.parse import unquote
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from oh_my_patent.skill_registry import load_registry
+
 
 def check(root):
     root = Path(root).resolve()
     errors = []
+    try:
+        load_registry(root)
+    except (OSError, ValueError, TypeError, AttributeError, yaml.YAMLError) as exc:
+        errors.append(f'registry: {exc}')
     skills = [root / 'SKILL.md', *sorted((root / 'domains').glob('*/SKILL.md'))]
     names = set()
     for path in skills:
@@ -94,7 +101,7 @@ def main():
     errors, counts = check(args.root)
     for error in errors:
         print(f'ERROR: {error}')
-    print(('FAIL' if errors else 'PASS') + ': ' + ', '.join(f'{k}={v}' for k, v in counts.items()))
+    print(('FAIL' if errors else 'PASS') + ' (structure only; model behavior not executed): ' + ', '.join(f'{k}={v}' for k, v in counts.items()))
     return int(bool(errors))
 
 

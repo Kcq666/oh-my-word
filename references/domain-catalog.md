@@ -1,5 +1,7 @@
 # 子 Skill 目录
 
+可执行登记以 [registry.yaml](../domains/registry.yaml) 为准，记录维护人、版本、范围、排除条件、复核日、状态与质量证据；`python tools/patent_lab.py modules` 校验。六个模块当前均为 experimental，不凭结构通过改为 validated。
+
 版本：1.0；维护日：2026-10-13。按技术贡献和保护主题选择，非行业关键词分类器。所有路径相对于本目录文件，保留整个仓库结构可直接读取。主入口是 [oh-my-patent](../SKILL.md)。
 
 | ID / 子 Skill | 选择依据 | 易混淆边界 |

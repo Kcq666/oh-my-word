@@ -1,0 +1,56 @@
+schema_version: 1
+modules:
+  - name: patent-software-ai
+    path: domains/patent-software-ai/SKILL.md
+    version: '1.0'
+    owner: open-agent-power
+    status: experimental
+    reviewed_on: '2026-10-13'
+    scope: 数据处理、模型构建训练、软件控制或应用结合是技术贡献。
+    exclusions: 仅出现平台或AI名称、仅使用通用计算机，不据此生成算法细节。
+    quality_evidence: []
+  - name: patent-mechanical
+    path: domains/patent-mechanical/SKILL.md
+    version: '1.0'
+    owner: open-agent-power
+    status: experimental
+    reviewed_on: '2026-10-13'
+    scope: 部件形状、连接、运动及制造装配关系是技术贡献。
+    exclusions: 新材料配方本身不因用于机械而成为结构发明。
+    quality_evidence: []
+  - name: patent-electronics
+    path: domains/patent-electronics/SKILL.md
+    version: '1.0'
+    owner: open-agent-power
+    status: experimental
+    reviewed_on: '2026-10-13'
+    scope: 电路拓扑、信号、协议、器件或电子控制链路有改进。
+    exclusions: 仅使用通用计算机执行算法通常由软件模块处理。
+    quality_evidence: []
+  - name: patent-chemical-materials
+    path: domains/patent-chemical-materials/SKILL.md
+    version: '1.0'
+    owner: open-agent-power
+    status: experimental
+    reviewed_on: '2026-10-13'
+    scope: 化学物质、组合物、配方、材料结构与制备工艺有改进。
+    exclusions: 只因应用场景属于工业而不涉及材料披露时不加载。
+    quality_evidence: []
+  - name: patent-biomedical
+    path: domains/patent-biomedical/SKILL.md
+    version: '1.0'
+    owner: open-agent-power
+    status: experimental
+    reviewed_on: '2026-10-13'
+    scope: 生物材料、序列、药物或医疗技术改变保护客体与实施条件。
+    exclusions: 医疗产品名称本身不触发药物或序列表流程。
+    quality_evidence: []
+  - name: patent-design
+    path: domains/patent-design/SKILL.md
+    version: '1.0'
+    owner: open-agent-power
+    status: experimental
+    reviewed_on: '2026-10-13'
+    scope: 外观设计视图、保护部分、简要说明与GUI状态。
+    exclusions: 不生成技术权项，不用技术性能界定外观保护。
+    quality_evidence: []

@@ -1,5 +1,7 @@
 # oh-my-patent
 
+维护模块、使用真实改稿和执行对照评测：见 [维护工具](docs/skills-maintenance.md)。`check_skills.py` 只测结构；`patent_lab.py` 支持案卷校验、Word 修订对照、资料需求清单与实际模型执行记录。领域质量提升仍需真实案卷和专业评分验证。
+
 运行 `python tools/check_skills.py` 检查技能包结构；行为效果按 [评测协议](references/skill-evaluation.md) 单独验证。
 
 > **通用专利工作流，按需组合领域子 Skill，输出可追溯的审阅稿。**

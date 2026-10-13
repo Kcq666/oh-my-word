@@ -4,6 +4,8 @@
 
 日常使用先看 [怎样使用已有专利](../docs/how-to-use-reference-patents.md)。下面的资料卡和分组规则供需要规模化积累时采用，不要求用户先建设数据库或训练平台。
 
+本地案卷清单、Word 修订/批注与前后对照已有 [维护命令](../docs/skills-maintenance.md)。input/reference/answer 按本次任务分开，默认 local_only，哈希和同族/同项目 split 由工具校验；近重复、未登记同族与修改理由仍由人核实。真实数据保存在代码仓库外。
+
 ## 四类材料分开使用
 
 | 角色 | 用途 | 不能据此推断 |
