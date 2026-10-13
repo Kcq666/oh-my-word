@@ -13,9 +13,40 @@ import yaml
 from oh_my_patent.casework import compare_revisions, read_revision, validate_case, validate_corpus, validate_needs
 from oh_my_patent.lab_common import digest, relative_file, write_json
 from oh_my_patent.skill_registry import load_registry
-from oh_my_patent.skill_eval import ExecutionInterrupted, prepare_suite, run_suite, summarize, verify_task
+from oh_my_patent.skill_eval import ExecutionInterrupted, execution_env, prepare_suite, run_suite, summarize, verify_task
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class ProxyEnvTests(unittest.TestCase):
+    def test_windows_inherits_system_proxy_without_mutating_parent(self):
+        parent = {'KEEP': 'value', 'NO_PROXY': 'localhost'}
+        with patch.dict('os.environ', parent, clear=True), patch('oh_my_patent.skill_eval.os.name', 'nt'), \
+             patch('oh_my_patent.skill_eval.getproxies', return_value={'http': 'http://127.0.0.1:12345', 'https': 'http://127.0.0.1:12345', 'no': 'other'}):
+            env = execution_env()
+            self.assertEqual(env['HTTPS_PROXY'], 'http://127.0.0.1:12345')
+            self.assertEqual(env['HTTP_PROXY'], env['HTTPS_PROXY'])
+            self.assertEqual(env['NO_PROXY'], 'localhost')
+            import os
+            self.assertNotIn('HTTPS_PROXY', os.environ)
+
+    def test_explicit_proxy_takes_priority_case_insensitively(self):
+        with patch.dict('os.environ', {'https_proxy': 'http://explicit'}, clear=True), \
+             patch('oh_my_patent.skill_eval.os.name', 'nt'), patch('oh_my_patent.skill_eval.getproxies') as proxies:
+            self.assertEqual({key.lower(): value for key, value in execution_env().items()}, {'https_proxy': 'http://explicit'})
+            proxies.assert_not_called()
+
+    def test_explicit_empty_proxy_does_not_enable_system_proxy(self):
+        with patch.dict('os.environ', {'HTTPS_PROXY': ''}, clear=True), \
+             patch('oh_my_patent.skill_eval.os.name', 'nt'), patch('oh_my_patent.skill_eval.getproxies') as proxies:
+            self.assertEqual(execution_env(), {'HTTPS_PROXY': ''})
+            proxies.assert_not_called()
+
+    def test_other_platform_keeps_environment(self):
+        with patch.dict('os.environ', {'KEEP': 'value'}, clear=True), \
+             patch('oh_my_patent.skill_eval.os.name', 'posix'), patch('oh_my_patent.skill_eval.getproxies') as proxies:
+            self.assertEqual(execution_env(), {'KEEP': 'value'})
+            proxies.assert_not_called()
 
 
 class LabTests(unittest.TestCase):

@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import time
 from datetime import datetime, timezone
+from urllib.request import getproxies
 
 import yaml
 
@@ -201,10 +202,23 @@ class ExecutionInterrupted(KeyboardInterrupt):
         self.returncode, self.stdout, self.stderr = returncode, stdout, stderr
 
 
+def execution_env():
+    """Respect explicit proxy env; otherwise inherit enabled Windows proxies."""
+    env = dict(os.environ)
+    explicit = {'http_proxy', 'https_proxy', 'all_proxy'} & {key.lower() for key in env}
+    if os.name == 'nt' and not explicit:
+        proxies = getproxies()
+        for scheme, name in (('http', 'HTTP_PROXY'), ('https', 'HTTPS_PROXY'), ('all', 'ALL_PROXY'), ('no', 'NO_PROXY')):
+            if proxies.get(scheme) and name.lower() not in {key.lower() for key in env}:
+                env[name] = proxies[scheme]
+    return env
+
+
 def _execute(argv, cwd, prompt, timeout):
     flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
     process = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, start_new_session=os.name != 'nt', creationflags=flags)
+                               stderr=subprocess.PIPE, start_new_session=os.name != 'nt', creationflags=flags,
+                               env=execution_env())
     try:
         stdout, stderr = process.communicate(prompt.encode('utf-8'), timeout=timeout)
         return process.returncode, stdout, stderr, False
