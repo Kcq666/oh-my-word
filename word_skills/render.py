@@ -107,7 +107,19 @@ def append_content(doc, draft, title=True):
     for section in draft["sections"]:
         doc.add_paragraph(section["title"], f"Heading {section.get('level', 1)}")
         for block in section["blocks"]:
-            if block["type"] == "paragraph":
+            if block["type"] == "code":
+                # Preserve every source line, including blank lines and indentation.
+                # Wrapped visual lines are measured by the PDF, never estimated here.
+                for line in block["text"].splitlines():
+                    p = doc.add_paragraph()
+                    p.paragraph_format.space_before = Pt(0)
+                    p.paragraph_format.space_after = Pt(0)
+                    p.paragraph_format.line_spacing = 1
+                    p.paragraph_format.widow_control = False
+                    run = p.add_run(line)
+                    run.font.name = "Consolas"
+                    run.font.size = Pt(8)
+            elif block["type"] == "paragraph":
                 p = doc.add_paragraph(block["text"])
                 p.paragraph_format.widow_control = True
             else:

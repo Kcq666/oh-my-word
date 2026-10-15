@@ -8,7 +8,7 @@ from defusedxml import ElementTree
 
 from .common import check_docx, now, sha256, write_json
 
-TEXT_EXTENSIONS = {".md", ".txt", ".py", ".java", ".xml", ".json", ".yaml", ".yml", ".toml", ".properties", ".js", ".ts", ".sql", ".csv"}
+TEXT_EXTENSIONS = {".md", ".txt", ".py", ".pyw", ".java", ".xml", ".json", ".yaml", ".yml", ".toml", ".properties", ".js", ".ts", ".sql", ".csv", ".jsx", ".tsx", ".kt", ".kts", ".go", ".rs", ".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".cs", ".swift", ".php", ".rb", ".scala", ".sh", ".bash", ".ps1", ".vue", ".svelte", ".html", ".css"}
 SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "target", "__pycache__", ".tools", "outputs", ".agent"}
 
 

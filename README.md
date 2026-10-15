@@ -5,11 +5,13 @@
 当前实现包括：
 
 - `word-skills`：总入口、技能注册表和确定性路由；
-- `oh-my-technology`：`technical-report` 与 `design-spec` 两种 JSON 中间稿模式；
+- `oh-my-technology`：技术报告、设计说明、需求规格、接口说明、测试报告、用户手册和运维手册七种 JSON 中间稿模式；
 - `word-document`：基本单节样式与受限 `docxtpl` 插槽模板；
-- `oh-my-patent`：原有发明、实用新型、外观设计 CLI、六个领域模块和 final/handoff 门禁。
+- `oh-my-patent`：原有发明、实用新型、外观设计 CLI、六个领域模块和 final/handoff 门禁；
+- `oh-my-proposal`：版本化指南、要求/章节/附件映射、人员材料和预算一致性检查；
+- `oh-my-copyright`：源码清单、原文选段、手册/申请字段一致性及材料生成。
 
-项目申报、软件著作权，以及需求、接口、测试、用户和运维五种技术文档模式已经登记为 `planned`，不会用空目录伪装成已实现能力。目标架构、依赖方向与阶段验收见 [docs/02-architecture.md](docs/02-architecture.md)、[docs/03-roadmap.md](docs/03-roadmap.md) 和 [registry/skills.yaml](registry/skills.yaml)。
+项目申报与软件著作权已接入 CLI 和共享交付链。附带的 NSFC Profile 只用于过期历史案例，不能当作当前开放渠道；真实申请仍须当期官方指南、申请人资料及人工核查。目标架构和能力边界见 [docs/02-architecture.md](docs/02-architecture.md)、[docs/03-roadmap.md](docs/03-roadmap.md) 和 [registry/skills.yaml](registry/skills.yaml)。
 
 ## 安装
 
@@ -31,7 +33,7 @@ python -m word_skills route "只调整 Word 页眉和页码" --json
 python -m word_skills route "请准备项目申报书" --json
 ```
 
-路由结果只声明登记状态。若命中 `planned`，需要补充材料或等待对应阶段实现；路由器不会自动写正文。
+路由结果只声明登记状态；路由器不会自动写正文，也不保证用户材料已经齐备。
 
 ## 技术文档与 Word 交付
 
@@ -48,6 +50,24 @@ python -m word_skills finalize delivery
 ```
 
 `reviewed` 只表示已记录的内容和版面复核，不表示事实真实性、正式提交、受理或授权。模板支持范围、证据契约和交付状态见 `skills/word-document/references/`。
+
+## 项目申报与软著准备
+
+```powershell
+python -m word_skills proposal template --profile nsfc-2026-general --out proposal.json
+# 先摄入真实指南、事实、人员和附件并填写草稿；历史 Profile 只作回归。
+python -m word_skills proposal lint proposal.json --case case --allow-expired
+python -m word_skills proposal build proposal.json --case case --out proposal-delivery --allow-expired --soffice "SOFFICE_EXE" --pdftoppm "PDFTOPPM_EXE"
+
+python -m word_skills copyright scan "SOURCE_ROOT" --out source-manifest.json
+python -m word_skills copyright template --out copyright.json
+# 填入原始源码行段、权属声明及真实手册后：
+python -m word_skills copyright lint copyright.json
+python -m word_skills copyright extract copyright.json --out "MATERIALS_OUTSIDE_SOURCE"
+python -m word_skills copyright build copyright.json --out copyright-delivery --soffice "SOFFICE_EXE" --pdftoppm "PDFTOPPM_EXE"
+```
+
+`proposal build` 和 `copyright build` 使用相同的 DOCX/PDF/页图审阅门禁，产物只有在实际审阅后才能 `finalize`。软著抽取不估页、不改写代码；页面材料的真实操作和登记规则仍需按项目及当期要求另行核对。
 
 ## 专利兼容入口
 

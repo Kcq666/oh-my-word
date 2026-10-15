@@ -1,0 +1,9 @@
+schema_version: 1
+mode: user-manual
+title: 用户手册
+required_sections:
+  audience: 适用对象与前置条件
+  getting-started: 开始使用
+  tasks: 任务步骤
+  troubleshooting: 异常与反馈
+  reference: 术语与参考

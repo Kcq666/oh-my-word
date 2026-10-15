@@ -6,15 +6,15 @@ skills:
     kind: router
     status: implemented
     modes: [routing, composition]
-    dependencies: [oh-my-technology, oh-my-patent, word-document]
+    dependencies: [oh-my-technology, oh-my-patent, oh-my-proposal, oh-my-copyright, word-document]
     evidence: [tests/test_word_skills.py]
   - name: oh-my-technology
     path: skills/oh-my-technology/SKILL.md
     kind: business
     status: implemented
-    modes: [technical-report, design-spec]
+    modes: [technical-report, design-spec, requirements-spec, interface-spec, test-report, user-manual, operations-manual]
     dependencies: [word-document]
-    evidence: [tests/test_pipeline.py]
+    evidence: [tests/test_pipeline.py, tests/test_technology_modes.py]
   - name: oh-my-patent
     path: skills/oh-my-patent/SKILL.md
     kind: business
@@ -30,16 +30,16 @@ skills:
     dependencies: []
     evidence: [tests/test_pipeline.py]
   - name: oh-my-proposal
-    path: null
+    path: skills/oh-my-proposal/SKILL.md
     kind: business
-    status: planned
+    status: implemented
     modes: [proposal, feasibility, budget]
     dependencies: [word-document]
-    evidence: []
+    evidence: [tests/test_proposal.py]
   - name: oh-my-copyright
-    path: null
+    path: skills/oh-my-copyright/SKILL.md
     kind: business
-    status: planned
+    status: implemented
     modes: [software-copyright, source-material, user-manual]
     dependencies: [word-document]
-    evidence: []
+    evidence: [tests/test_copyright.py]

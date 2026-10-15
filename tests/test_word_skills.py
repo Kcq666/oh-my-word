@@ -17,14 +17,14 @@ def test_packaged_registry_snapshot_matches_source_of_truth():
     ).read_text(encoding="utf-8")
 
 
-def test_registry_has_implemented_and_planned_states():
+def test_registry_has_six_implemented_skills():
     rows = load_registry(ROOT)
     assert {row["name"] for row in rows} == {
         "word-skills", "oh-my-technology", "oh-my-patent", "word-document",
         "oh-my-proposal", "oh-my-copyright",
     }
-    assert {row["status"] for row in rows} == {"implemented", "planned"}
-    assert all(row["path"] is None for row in rows if row["status"] == "planned")
+    assert {row["status"] for row in rows} == {"implemented"}
+    assert all(row["path"] for row in rows)
 
 
 @pytest.mark.parametrize(
@@ -44,11 +44,11 @@ def test_route_selects_implemented_skill(user_request, skill, mode):
     assert not result["needs_clarification"]
 
 
-def test_route_does_not_claim_planned_capability():
+def test_route_selects_proposal_preparation():
     result = route("请准备项目申报书和预算说明", ROOT)
     assert result["selected"] == "oh-my-proposal"
-    assert result["needs_clarification"]
-    assert result["matches"][0]["status"] == "planned"
+    assert not result["needs_clarification"]
+    assert result["matches"][0]["status"] == "implemented"
 
 
 def test_route_keeps_ambiguous_composition_explicit():
@@ -58,12 +58,12 @@ def test_route_keeps_ambiguous_composition_explicit():
     assert {item["skill"] for item in result["matches"]} == {"oh-my-patent", "word-document", "oh-my-technology"}
 
 
-def test_route_does_not_map_unimplemented_technical_modes_to_report():
+def test_route_selects_interface_mode():
     result = route("请写一份接口说明", ROOT)
     assert result["selected"] == "oh-my-technology"
     assert result["matches"][0]["mode"] == "interface-spec"
-    assert result["matches"][0]["status"] == "planned"
-    assert result["needs_clarification"]
+    assert result["matches"][0]["status"] == "implemented"
+    assert not result["needs_clarification"]
 
 
 def test_contract_dataclasses_are_versioned_and_json_ready():

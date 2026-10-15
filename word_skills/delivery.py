@@ -6,7 +6,7 @@ from pathlib import Path
 
 from . import __version__
 from .common import digest, finding, inside, now, read_json, sha256, write_json
-from .evidence import validate
+from .evidence import contract, validate
 from .inspect import inspect_docx, inspect_pdf, preview
 from .render import fingerprint, render
 
@@ -26,19 +26,22 @@ def versions():
     return result
 
 
-def build(draft_path, case, output, template=None, template_mode="style", soffice=None, pdftoppm=None, no_preview=False):
+def build(draft_path, case, output, template=None, template_mode="style", soffice=None, pdftoppm=None, no_preview=False, *, business_gate=None):
     output, case, draft_path = Path(output).resolve(), Path(case).resolve(), Path(draft_path).resolve()
+    draft = read_json(draft_path)
+    required_gate = contract(draft["mode"]).get("business_gate")
+    if required_gate != business_gate:
+        raise ValueError(f"{draft['mode']} requires its dedicated business build command")
     if output.exists():
         raise ValueError("Output directory already exists; use a fresh path to preserve prior deliveries")
     output.mkdir(parents=True)
     audit = output / "audit"
     audit.mkdir()
-    draft = read_json(draft_path)
     validation = validate(draft, case)
     write_json(audit / "validation.json", validation)
     manifest = {"schema_version": 1, "created_at": now(), "state": "blocked", "mode": draft["mode"],
                 "code_identity": code_identity(), "versions": versions(), "template_mode": template_mode if template else None,
-                "inputs": {}, "outputs": {}, "review": "not performed"}
+                "business_gate": required_gate, "inputs": {}, "outputs": {}, "review": "not performed"}
     # Keep an auditable, portable snapshot; never mutate the input case or draft.
     shutil.copyfile(draft_path, audit / "draft.json")
     for name in ("source-index.json", "evidence.json"):
@@ -74,7 +77,7 @@ def build(draft_path, case, output, template=None, template_mode="style", soffic
             pdf_check = inspect_pdf(output / "preview.pdf", draft)
             write_json(audit / "layout.json", pdf_check)
             validation["issues"] += pdf_check["issues"]
-            manifest["state"] = "awaiting-review"
+            manifest["state"] = "business-pending" if required_gate else "awaiting-review"
     except Exception as exc:
         validation["issues"].append(finding("BUILD_FAILED", f"{type(exc).__name__}: {exc}"))
         manifest["state"] = "failed"
@@ -112,6 +115,13 @@ def finalize(output):
     manifest = read_json(output / "manifest.json")
     if manifest["state"] != "awaiting-review":
         raise ValueError("Delivery must be awaiting-review")
+    required_gate = contract(manifest["mode"]).get("business_gate")
+    if required_gate:
+        business = manifest.get("business", {})
+        if business.get("kind") != required_gate or business.get("input") not in manifest["inputs"] or business.get("checks") not in manifest["inputs"]:
+            raise ValueError("Business validation audit is missing or unbound")
+        if not read_json(output / business["checks"]).get("passed"):
+            raise ValueError("Business validation did not pass")
     if manifest["code_identity"] != code_identity():
         raise ValueError("Generator changed since build; rebuild before final review")
     for rel, checksum in (manifest["inputs"] | manifest["outputs"]).items():

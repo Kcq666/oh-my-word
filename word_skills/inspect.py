@@ -26,13 +26,20 @@ def inspect_docx(path, draft):
         issues.append(finding("DOCX_EMPTY", "Document text empty"))
     if draft["title"] not in texts:
         issues.append(finding("DOCX_TITLE", "Document title missing"))
-    if re.search(r"TODO|XXX|\{\{|\{%|待补充", text):
+    code_lines = {line for section in draft["sections"] for block in section["blocks"] if block["type"] == "code" for line in block["text"].splitlines()}
+    prose = "\n".join(t for t in texts if t not in code_lines)
+    if re.search(r"TODO|XXX|\{\{|\{%|待补充", prose):
         issues.append(finding("DOCX_PLACEHOLDER", "Unresolved placeholder in final document"))
     for section in draft["sections"]:
         if section["title"] not in texts:
             issues.append(finding("DOCX_SECTION", f"Heading missing: {section['title']}"))
         for block in section["blocks"]:
-            required = [block["text"]] if block["type"] == "paragraph" else [str(c) for row in [block["headers"]] + block["rows"] for c in row]
+            if block["type"] == "code":
+                required = block["text"].splitlines()
+            elif block["type"] == "paragraph":
+                required = [block["text"]]
+            else:
+                required = [str(c) for row in [block["headers"]] + block["rows"] for c in row]
             if any(t not in texts for t in required):
                 issues.append(finding("DOCX_CONTENT", f"Content missing: {block['id']}"))
     available = min(s.page_width - s.left_margin - s.right_margin for s in doc.sections)

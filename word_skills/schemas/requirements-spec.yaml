@@ -1,0 +1,9 @@
+schema_version: 1
+mode: requirements-spec
+title: 需求规格说明
+required_sections:
+  context: 背景与角色
+  scope: 范围与约束
+  requirements: 功能与非功能需求
+  acceptance: 验收条件
+  traceability: 需求追踪与缺口

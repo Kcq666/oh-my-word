@@ -1,0 +1,9 @@
+schema_version: 1
+mode: test-report
+title: 测试报告
+required_sections:
+  scope: 测试范围
+  environment: 环境与版本
+  cases: 用例与执行记录
+  defects: 缺陷与限制
+  conclusion: 结论与未执行项

@@ -55,4 +55,4 @@ Repository = "https://github.com/open-agent-power/oh-my-word.git"
 include = ["oh_my_patent*", "word_skills*"]
 
 [tool.setuptools.package-data]
-word_skills = ["schemas/*.yaml", "data/*.yaml"]
+word_skills = ["schemas/*.yaml", "data/*.yaml", "data/proposal-profiles/*.yaml"]

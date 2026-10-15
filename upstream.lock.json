@@ -4,6 +4,36 @@
   "scope": "Sources actually adapted into this repository and direct runtime packages exercised in the local acceptance environment. Research candidates are recorded separately in docs/upstream-sources.json.",
   "adapted_sources": [
     {
+      "repository": "Fokkyp/SoftwareCopyright-Skill",
+      "commit": "947d5963194bfda8ce57b8b454b486f13359dee4",
+      "license": "MIT",
+      "source_files": ["software-copyright-materials/SKILL.md", "software-copyright-materials/scripts/extract_code_material.py"],
+      "license_file": "third_party/licenses/fokkyp-MIT.txt",
+      "destination_files": ["word_skills/copyright.py", "skills/oh-my-copyright/SKILL.md"],
+      "adaptation": "Applied source selection, file/line provenance and manual evidence boundaries; no OfficeCLI or upstream executable code copied.",
+      "verification": "Pinned tree and LICENSE reviewed; local source-hash, range and exclusion tests pass."
+    },
+    {
+      "repository": "suling-fun/software-copyright-materials-skill",
+      "commit": "d7b49eea8f6e455ef3547c0d16d1945e204bc8a7",
+      "license": "MIT",
+      "source_files": ["SKILL.md", "verify_materials.py"],
+      "license_file": "third_party/licenses/suling-MIT.txt",
+      "destination_files": ["word_skills/copyright.py", "tests/test_copyright.py"],
+      "adaptation": "Applied the separation between mechanical material checks and human semantic review; no upstream verifier or blacklist copied.",
+      "verification": "Pinned tree and LICENSE reviewed; credential exclusion and source-change regression tests pass."
+    },
+    {
+      "repository": "caolonghao/nsfc-grant-assistant-skill",
+      "commit": "a694ab4cfbf8bad64357c6803e5f39c4b0eda47a",
+      "license": "MIT",
+      "source_files": ["ndrc-bid-assistant/", "LICENSE"],
+      "license_file": "third_party/licenses/nsfc-grant-assistant-MIT.txt",
+      "destination_files": ["word_skills/proposal.py", "skills/oh-my-proposal/SKILL.md"],
+      "adaptation": "Applied channel and guide evidence before drafting; no upstream reviewer model or Agent orchestration copied.",
+      "verification": "Pinned tree and LICENSE reviewed; requirement quote, trace and budget tests pass."
+    },
+    {
       "repository": "Fenng/Tech-Doc-Style-Chinese",
       "commit": "b119d01c9bb7cd132b3c62fafdff34227c4410d1",
       "license": "MIT",

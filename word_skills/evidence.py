@@ -18,9 +18,19 @@ from .models import (
 
 
 def contract(mode):
-    if mode not in {"technical-report", "design-spec"}:
+    if not isinstance(mode, str) or not re.fullmatch(r"[a-z][a-z0-9-]+", mode):
         raise ValueError(f"Unsupported mode: {mode}")
-    return yaml.safe_load(files("word_skills").joinpath(f"schemas/{mode}.yaml").read_text(encoding="utf-8"))
+    try:
+        path = files("word_skills").joinpath(f"schemas/{mode}.yaml")
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise ValueError(f"Unsupported mode: {mode}") from exc
+    if not isinstance(data, dict) or data.get("schema_version") != 1 or data.get("mode") != mode:
+        raise ValueError(f"Invalid schema for mode: {mode}")
+    sections = data.get("required_sections")
+    if not isinstance(sections, dict) or not sections or any(not isinstance(k, str) or not isinstance(v, str) for k, v in sections.items()):
+        raise ValueError(f"Invalid required_sections for mode: {mode}")
+    return data
 
 
 def numbers(text):
@@ -98,19 +108,19 @@ def validate(draft, case):
             if not bid or bid in block_ids:
                 issues.append(finding("BLOCK_ID", "Missing or duplicate block ID", location=sid))
             block_ids.add(bid)
-            if block.get("type") not in {"paragraph", "table"}:
-                issues.append(finding("BLOCK_TYPE", "Supported types: paragraph/table", location=bid))
+            if block.get("type") not in {"paragraph", "table", "code"}:
+                issues.append(finding("BLOCK_TYPE", "Supported types: paragraph/table/code", location=bid))
                 continue
             text = block_text(block)
             if not text.strip():
                 issues.append(finding("EMPTY_BLOCK", "Empty body block", location=bid))
-            if re.search(r"TODO|XXX|待补充|\{\{|\{%", text, re.I):
+            if block.get("type") != "code" and re.search(r"TODO|XXX|待补充|\{\{|\{%", text, re.I):
                 issues.append(finding("PLACEHOLDER", "Visible placeholder remains", location=bid))
             intent = block.get("intent")
             if intent not in {"fact", "analysis", "gap"}:
                 issues.append(finding("INTENT", "Block needs fact/analysis/gap intent", location=bid))
             refs = block.get("claim_ids", [])
-            if intent == "fact" and not refs:
+            if intent == "fact" and not refs and block.get("type") != "code":
                 issues.append(finding("UNSOURCED", "Factual block needs claim IDs", location=bid))
             supported = set()
             for cid in refs:
@@ -120,6 +130,24 @@ def validate(draft, case):
                 else:
                     supported |= numbers(claim.get("statement", ""))
             extra = numbers(text) - supported
+            if block.get("type") == "code":
+                # Code is literal evidence, never generated prose or a claim-number bypass.
+                source = sources.get(block.get("source_id"))
+                start, end = block.get("line_start"), block.get("line_end")
+                valid_range = type(start) is int and type(end) is int and 1 <= start <= end
+                exact = False
+                if source and valid_range:
+                    raw = inside(case, source["snapshot"]).read_bytes()
+                    try:
+                        content = raw.decode("utf-8-sig")
+                    except UnicodeDecodeError:
+                        content = raw.decode("gb18030")
+                    lines = content.splitlines(keepends=True)
+                    exact = end <= len(lines) and text == "".join(lines[start - 1:end])
+                if intent != "fact" or not exact:
+                    issues.append(finding("CODE_EXACT_SOURCE", "Code must equal the exact source snapshot line range", location=bid))
+                else:
+                    extra = set()
             if extra:
                 issues.append(finding("UNSUPPORTED_NUMBER", f"Numeric tokens without verified claim: {sorted(extra)}", location=bid))
             if intent == "gap":
@@ -139,6 +167,9 @@ def validate(draft, case):
         issues.append(finding("NUMERIC_TITLE", "Place numeric claims in evidence-bound body text"))
     if not sources:
         issues.append(finding("NO_SOURCES", "No readable sources indexed"))
+    # Load only technical checks; business adapters are orchestrated separately.
+    from .technology import validate as validate_mode
+    issues.extend(validate_mode(draft, ledger))
     return {"schema_version": 1, "passed": not any(i["severity"] == "error" for i in issues),
             "checks": "structure, source integrity, exact quotation, numeric coverage; semantic support requires review",
             "issues": issues}

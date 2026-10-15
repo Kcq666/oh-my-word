@@ -1,0 +1,9 @@
+schema_version: 1
+mode: operations-manual
+title: 运维手册
+required_sections:
+  scope: 运行范围与版本
+  installation: 安装与配置
+  monitoring: 监控与备份
+  recovery: 升级、回滚与恢复
+  troubleshooting: 故障排查与验证

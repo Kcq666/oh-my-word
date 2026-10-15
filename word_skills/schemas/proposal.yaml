@@ -1,0 +1,10 @@
+schema_version: 1
+mode: proposal
+business_gate: proposal
+title: 项目申请书
+required_sections:
+  basis: 立项依据
+  research: 研究内容与技术路线
+  foundation: 研究基础与条件
+  compliance: 申请合规与附件
+  budget: 预算一致性附表

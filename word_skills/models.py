@@ -144,7 +144,7 @@ def validate_draft_v1(value: Any) -> dict:
         for j, block in enumerate(_array(section.get("blocks", []), f"{location}.blocks")):
             block_location = f"{location}.blocks[{j}]"
             block = _object(block, block_location)
-            for key in ("id", "type", "intent", "text"):
+            for key in ("id", "type", "intent", "text", "source_id"):
                 if key in block:
                     _string(block[key], f"{block_location}.{key}")
             for k, claim_id in enumerate(_array(block.get("claim_ids", []), f"{block_location}.claim_ids")):

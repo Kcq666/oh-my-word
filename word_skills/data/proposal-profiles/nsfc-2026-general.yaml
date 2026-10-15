@@ -1,0 +1,50 @@
+schema_version: 1
+id: nsfc-2026-general
+agency: 国家自然科学基金委员会
+program: 2026 年面上项目/青年科学基金项目（C类）通用框架
+year: 2026
+notice_id: 国科金发计〔2026〕2号
+template_version: 2026-structure-v1
+source_url: https://www.nsfc.gov.cn/p1/3381/2821/99242.html
+retrieved_at: "2026-10-15"
+status: expired
+budget_mode: budgeted-or-profile-dependent
+requirements:
+  - id: R1
+    text: 立项依据应说明开展研究的必要性与价值。
+    section: basis
+  - id: R2
+    text: 研究内容应按项目自身逻辑组织，并区分目标、任务与拟解决问题。
+    section: research
+  - id: R3
+    text: 研究基础应只使用可核验的前期工作与成果。
+    section: foundation
+  - id: R4
+    text: 申请人应核对申请代码、研究方向、关键词及参与者材料。
+    section: compliance
+  - id: R5
+    text: 使用生成式人工智能时必须人工核实并按当期规则披露，不得直接使用生成申请书。
+    section: compliance
+sections:
+  - id: basis
+    title: 立项依据
+    kind: fact-and-rationale
+  - id: research
+    title: 研究内容与技术路线
+    kind: plan
+  - id: foundation
+    title: 研究基础与条件
+    kind: fact
+  - id: compliance
+    title: 申请合规与附件
+    kind: checklist
+  - id: budget
+    title: 预算一致性附表（本工具核对用，非官方格式）
+    kind: budget-check
+attachments:
+  - id: A1
+    name: 主要参与者在线生成的 PDF 简历及代表性成果附件
+    required: true
+  - id: A2
+    name: 依托单位项目申请承诺材料
+    required: true

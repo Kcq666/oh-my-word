@@ -1,0 +1,6 @@
+interface:
+  display_name: "Oh My Proposal"
+  short_description: "Traceable project proposal preparation"
+  default_prompt: "Use $oh-my-proposal to prepare a guide-bound proposal draft."
+policy:
+  allow_implicit_invocation: true

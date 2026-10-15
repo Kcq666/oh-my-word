@@ -31,12 +31,22 @@
 
 第三方库通过包管理器安装，不复制源码或重新许可。发行安装器、捆绑二进制或修改库前，另核对相应版本完整许可及间接依赖声明。`requirements-tested.txt` 记录本轮主要运行版本，不代表全部传递依赖锁定。
 
+## 业务技能复用核查
+
+以下固定提交实际用于申报/软著技能的设计取舍；均为 MIT。复用的是可核验的流程边界和材料字段，未复制其执行器或整套 Agent 编排。
+
+| 来源与固定提交 | 核查文件 | 本地落点 | 复用决策 |
+|---|---|---|---|
+| [Fokkyp/SoftwareCopyright-Skill](https://github.com/Fokkyp/SoftwareCopyright-Skill/tree/947d5963194bfda8ce57b8b454b486f13359dee4) | `software-copyright-materials/SKILL.md`; `scripts/extract_code_material.py`; `LICENSE` | `word_skills/copyright.py`; `skills/oh-my-copyright/` | 采用真实源码选择、文件/行段追溯和手册证据边界；不采用 OfficeCLI 执行器 |
+| [suling-fun/software-copyright-materials-skill](https://github.com/suling-fun/software-copyright-materials-skill/tree/d7b49eea8f6e455ef3547c0d16d1945e204bc8a7) | `SKILL.md`; `verify_materials.py`; `LICENSE` | `word_skills/copyright.py`; `skills/oh-my-copyright/` | 采用机械校验与人工语义复核的边界；不复制黑名单或登记器 |
+| [caolonghao/nsfc-grant-assistant-skill](https://github.com/caolonghao/nsfc-grant-assistant-skill/tree/a694ab4cfbf8bad64357c6803e5f39c4b0eda47a) | `ndrc-bid-assistant/`; `LICENSE` | `word_skills/proposal.py`; `skills/oh-my-proposal/` | 采用渠道/指南/条件证据先行；不复制评审模型或 Agent 编排 |
+
+每项的固定提交、许可证文本和核查结果也记录在 [upstream.lock.json](upstream.lock.json)。候选调查仍在 [docs/upstream-sources.json](docs/upstream-sources.json)，不能把候选列表当作已集成依赖。
+
 ## 本轮新增候选但未集成
 
 | 仓库 | 固定 SHA | 实际核查与决策 |
 |---|---|---|
-| [suling-fun/software-copyright-materials-skill](https://github.com/suling-fun/software-copyright-materials-skill) | d7b49eea8f6e455ef3547c0d16d1945e204bc8a7 | LICENSE 为 MIT，读取 verify_materials.py 前部；机械检查与独立语义复核值得采纳。软著阶段再与 Fokkyp 比较，不在 P0 导入执行器 |
-| [caolonghao/nsfc-grant-assistant-skill](https://github.com/caolonghao/nsfc-grant-assistant-skill) | a694ab4cfbf8bad64357c6803e5f39c4b0eda47a | LICENSE 为 MIT，读取 ndrc-bid-assistant 入口前部；条件证据、具体指南与评审模型留待申报阶段，不自动采用其 Agent 编排 |
 | [docling-project/docling](https://github.com/docling-project/docling) | 6fadbae317b09c4dd4051c0f1fc1746c6baf04bc | GitHub 识别 MIT，目录已核查；暂不安装模型和复杂输入后端，模型许可尚待具体选型 |
 
 OpenAI skill-creator 使用当前环境提供的初始化/元数据/校验工具，未复制到本仓库。初轮来源继续见 docs/upstream-sources.json；它是候选调查记录，不是实际依赖锁。

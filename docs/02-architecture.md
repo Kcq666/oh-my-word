@@ -1,6 +1,6 @@
 # 技能划分与代码架构
 
-状态：目标架构，技术文档 P0 与专利兼容整合切片已落地。本文的目标职责仍是长期设计；下方“当前落地状态”区分真实实现与规划能力。
+状态：目标架构的当前整合实现。本文仍区分代码/契约实现、真实产物验收和法律/业务判断。
 
 ## 0. 当前落地状态（2026-10-15）
 
@@ -9,12 +9,13 @@
 | 目标 | 当前实现 | 证据与边界 |
 |---|---|---|
 | `word-skills` 路由入口 | 注册表驱动的 `skills/word-skills/SKILL.md`、`registry/skills.yaml` 与确定性 CLI 路由 | `tests/test_word_skills.py`；路由匹配不代替 Agent 的语义判断 |
-| `oh-my-technology` | `technical-report`、`design-spec` 两种 JSON v1 模式及来源、内容、Word/PDF 交付流程 | `tests/test_pipeline.py`；其余五种技术文档模式仍为 planned |
+| `oh-my-technology` | 七种 JSON v1 模式及来源、内容、Word/PDF 交付流程；五种新增模式有独立记录检查 | `tests/test_pipeline.py`、`tests/test_technology_modes.py`；真实客户模板与跨环境版式仍需试运行 |
 | `word-document` | 单节基本样式、有限模板插槽、预览与逐页审阅记录 | `skills/word-document/`；不代表任意企业模板或所有 Office/WPS 版本已验证 |
 | `oh-my-patent` | 原 Python 包、旧 CLI、主 Skill、六领域 Skill、领域注册表和 final/handoff 门禁保留 | `tests/test_final_gate.py`、`tests/test_skill_bundle.py`；六领域保持 `experimental` |
-| `oh-my-proposal`、`oh-my-copyright` | 只在主注册表声明 `planned`，无可执行 Skill 路径 | 不生成空入口，不对外声称已支持 |
+| `oh-my-proposal` | 指南 Profile、要求/章节/附件/人员/预算校验和共享 build 适配 | `word_skills/proposal.py`、`tests/test_proposal.py`；随附 NSFC 2026 Profile 是过期历史结构 |
+| `oh-my-copyright` | 源码扫描、敏感信息排除、哈希/行段校验、手册/字段一致性、摘录与共享 build 适配 | `word_skills/copyright.py`、`tests/test_copyright.py`；页数、权属和当期登记规则仍需人工核对 |
 
-主注册表共六项，四项实现、两项规划；专利领域另有六项实验性 Skill，共十二份目标 Skill 文件。`tools/check_word_skills.py` 与 `tools/check_skills.py` 验证路径、frontmatter、注册表和引用；自动化测试验证代码行为，不是写作质量或法律审查结论。
+主注册表共六项，均有实现路径；专利领域另有六项实验性 Skill。`tools/check_word_skills.py` 与 `tools/check_skills.py` 验证路径、frontmatter、注册表和引用；自动化测试验证代码行为，不是写作质量、法律权属或受理结论。
 
 整合决策与兼容边界：
 
@@ -74,8 +75,7 @@ oh-my-word/                        # 当前 GitHub 仓库
 │  ├─ oh-my-technology/
 │  │  ├─ SKILL.md
 │  │  ├─ agents/openai.yaml
-│  │  ├─ references/               # intake、evidence、review + 7 模式
-│  │  └─ assets/templates/         # 已经验证的 MD / DOCX 模板
+│  │  └─ references/               # 写作流程与 7 模式
 │  ├─ oh-my-patent/
 │  │  ├─ SKILL.md
 │  │  ├─ prompts/
@@ -89,15 +89,15 @@ oh-my-word/                        # 当前 GitHub 仓库
 ├─ word_skills/
 │  ├─ cli.py
 │  ├─ models.py                    # DocumentDraft、Source、Fact、Review
-│  ├─ ingest/                      # 旧摄入适配 + 按需新增格式
-│  ├─ evidence/                    # 来源、定位、摘要、变化检测
-│  ├─ render/                      # docx、可选模板后端、OOXML 辅助
-│  ├─ validate/                    # 结构、交叉引用、数值一致性、交付状态
-│  └─ domains/
-│     ├─ technology.py
-│     ├─ proposal.py
-│     ├─ copyright.py
-│     └─ legacy_patent.py          # 调用原实现的适配层
+│  ├─ ingest.py                    # 来源摄入和哈希快照
+│  ├─ evidence.py                  # JSON v1 证据/数字/来源校验
+│  ├─ technology.py                # 新技术模式的独立记录检查
+│  ├─ proposal.py                  # 指南/预算业务层
+│  ├─ copyright.py                 # 源码/权属声明业务层
+│  ├─ business.py                  # 业务结果绑定到共用审阅 manifest
+│  ├─ render.py, inspect.py        # Word 制作与 PDF/页图检查
+│  ├─ delivery.py                  # build/review/finalize
+│  └─ legacy_patent.py             # 原专利入口适配
 ├─ oh_my_patent/                   # 初期原代码保留，逐步抽取共享函数
 ├─ tools/
 │  ├─ patent.py                    # 保留旧入口兼容
@@ -129,7 +129,7 @@ oh-my-word/                        # 当前 GitHub 仓库
 
 ## 5. 最小数据契约
 
-以 JSON 和 Markdown 为主。技术文档现行数据结构由两份 YAML 章节 schema 与 JSON v1 运行时校验共同约束；下表中的跨业务对象仍是目标模型，不等于都已接入现有管线。
+以 JSON 和 Markdown 为主。技术文档现行结构由七份 YAML 章节 schema、五种独立记录检查与 JSON v1 运行时校验共同约束；申报/软著另有业务输入契约并投影到共用 Word 链。下表中的跨业务对象部分仍是目标模型，不等于所有 dataclass 都已成为现行序列化格式。
 
 | 对象 | 核心字段 | 意义 |
 |---|---|---|

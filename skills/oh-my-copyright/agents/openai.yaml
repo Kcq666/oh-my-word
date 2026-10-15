@@ -1,0 +1,6 @@
+interface:
+  display_name: "Oh My Copyright"
+  short_description: "Traceable software copyright materials"
+  default_prompt: "Use $oh-my-copyright to prepare source and manual materials."
+policy:
+  allow_implicit_invocation: true
