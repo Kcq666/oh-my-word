@@ -10,8 +10,15 @@ import yaml
 from .lab_common import relative_file
 
 
-def load_registry(root):
+def patent_skill_root(root):
+    """Locate the patent Skill in the monorepo or a standalone Skill copy."""
     root = Path(root).resolve()
+    nested = root / 'skills' / 'oh-my-patent'
+    return nested if (nested / 'domains' / 'registry.yaml').is_file() else root
+
+
+def load_registry(root):
+    root = patent_skill_root(root)
     data = yaml.safe_load((root / 'domains/registry.yaml').read_text(encoding='utf-8'))
     if not isinstance(data, dict) or data.get('schema_version') != 1:
         raise ValueError('domain registry requires schema_version=1')

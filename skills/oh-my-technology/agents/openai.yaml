@@ -1,0 +1,4 @@
+interface:
+  display_name: "技术文档撰写"
+  short_description: "依据真实项目材料撰写技术报告与设计说明并验证可编辑文档交付"
+  default_prompt: "使用 $oh-my-technology 根据项目材料撰写可追溯的技术报告。"

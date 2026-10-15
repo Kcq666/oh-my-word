@@ -8,17 +8,18 @@ from urllib.parse import unquote
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from oh_my_patent.skill_registry import load_registry
+from oh_my_patent.skill_registry import load_registry, patent_skill_root
 
 
 def check(root):
     root = Path(root).resolve()
+    patent = patent_skill_root(root)
     errors = []
     try:
         load_registry(root)
     except (OSError, ValueError, TypeError, AttributeError, yaml.YAMLError) as exc:
         errors.append(f'registry: {exc}')
-    skills = [root / 'SKILL.md', *sorted((root / 'domains').glob('*/SKILL.md'))]
+    skills = [patent / 'SKILL.md', *sorted((patent / 'domains').glob('*/SKILL.md'))]
     names = set()
     for path in skills:
         try:
@@ -43,9 +44,11 @@ def check(root):
         except (OSError, ValueError, TypeError, AttributeError, yaml.YAMLError) as exc:
             errors.append(f'{path.relative_to(root)}: {exc}')
 
-    docs = skills + [root / 'README.md']
+    # A standalone patent bundle has a root README.  In the monorepo the root
+    # README belongs to the word-skills router and is checked separately.
+    docs = skills + ([root / 'README.md'] if patent == root and (root / 'README.md').is_file() else [])
     for directory in ('references', 'prompts'):
-        docs.extend(sorted((root / directory).rglob('*.md')))
+        docs.extend(sorted((patent / directory).rglob('*.md')))
     links = 0
     for path in docs:
         if not path.exists():
@@ -59,7 +62,7 @@ def check(root):
             links += 1
             if not (path.parent / target).exists():
                 errors.append(f'{path.relative_to(root)}: broken link {target}')
-    catalog = root / 'references/domain-catalog.md'
+    catalog = patent / 'references/domain-catalog.md'
     catalog_text = catalog.read_text(encoding='utf-8') if catalog.exists() else ''
     for path in skills[1:]:
         if f'../domains/{path.parent.name}/SKILL.md' not in catalog_text:

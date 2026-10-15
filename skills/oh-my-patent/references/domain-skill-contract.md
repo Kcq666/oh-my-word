@@ -21,7 +21,7 @@
 
 ## 合并与验证
 
-在 [登记表](../domains/registry.yaml) 增加 owner、version、scope、exclusions、reviewed_on、status 和 quality_evidence，与 frontmatter 一致。experimental → validated 需要质量对照与专业复核，机器只检查结构及证据文件存在；目录检查或少数路由试验不足以升级。细分行业优先作为参考资料，只有稳定独特判断且有回归案例才拆模块。操作见 [维护工具](../docs/skills-maintenance.md)。
+在 [登记表](../domains/registry.yaml) 增加 owner、version、scope、exclusions、reviewed_on、status 和 quality_evidence，与 frontmatter 一致。experimental → validated 需要质量对照与专业复核，机器只检查结构及证据文件存在；目录检查或少数路由试验不足以升级。细分行业优先作为参考资料，只有稳定独特判断且有回归案例才拆模块。操作见 [维护工具](../../../docs/skills-maintenance.md)。
 
 在目录登记相对路径；验证 name/description、所有链接、完整包依赖和无循环执行。嵌套目录不是标准强制的父子调用机制，本项目依靠主入口显式读取；单独安装子目录前必须打包共用依赖或重新设计入口，并真实验证宿主发现。
 

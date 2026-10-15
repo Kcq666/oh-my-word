@@ -28,14 +28,18 @@ def now():
 
 def bundle_files(root, mode):
     root = Path(root)
-    files = [root/'SKILL.md', root/'requirements.txt', root/'requirements-ingest.txt']
-    for directory, pattern in (('oh_my_patent', '*.py'), ('tools', '*.py'), ('prompts', '*.md')):
-        files.extend((root/directory).rglob(pattern))
-    files.extend((root/'references').glob('*.md'))
+    patent_root = root / 'skills' / 'oh-my-patent'
+    if not (patent_root / 'SKILL.md').is_file():
+        patent_root = root
+    files = [patent_root/'SKILL.md', root/'requirements.txt', root/'requirements-ingest.txt']
+    files.extend((root/'oh_my_patent').rglob('*.py'))
+    files.extend((root/'tools').rglob('*.py'))
+    files.extend((patent_root/'prompts').rglob('*.md'))
+    files.extend((patent_root/'references').glob('*.md'))
     files.extend(root/'docs'/n for n in ('format-spec.md', 'how-to-use-reference-patents.md', 'skills-maintenance.md'))
     if mode == 'domain':
-        files.extend((root/'domains').rglob('SKILL.md'))
-        files.append(root/'domains/registry.yaml')
+        files.extend((patent_root/'domains').rglob('SKILL.md'))
+        files.append(patent_root/'domains/registry.yaml')
     else:
         files = [p for p in files if p.name not in ('domain-catalog.md', 'domain-routing.md', 'domain-skill-contract.md')]
     # tests, eval answers, research dumps, private cases and local state never enter.
@@ -55,7 +59,11 @@ def verify_task(task):
 
 def generic_entrypoint(root):
     """Change only the routing block, retaining all shared orchestration."""
-    text = (Path(root)/'SKILL.md').read_text(encoding='utf-8')
+    root = Path(root)
+    entry = root/'skills/oh-my-patent/SKILL.md'
+    if not entry.is_file():
+        entry = root/'SKILL.md'
+    text = entry.read_text(encoding='utf-8')
     start, end = '## 总览与领域路由', '## 必走链路'
     if text.count(start) != 1 or text.count(end) != 1 or text.index(start) >= text.index(end):
         raise ValueError('entrypoint routing boundaries changed; update baseline explicitly')
@@ -75,7 +83,7 @@ def read_suite(path):
             raise ValueError('invalid task mode/permission')
         if not isinstance(task.get('workspace'), str) or not Path(task['workspace']).is_absolute() or not isinstance(task.get('files'), dict):
             raise ValueError('invalid task workspace/files')
-        if not {'task.json', 'prompt.txt', 'bundle/SKILL.md'} <= task['files'].keys():
+        if not {'task.json', 'prompt.txt', 'bundle/skills/oh-my-patent/SKILL.md'} <= task['files'].keys():
             raise ValueError('incomplete task file manifest')
     return suite
 
@@ -143,7 +151,7 @@ def prepare_suite(root, cases_path, out, *, modes=('generic', 'domain'), selecte
             for repeat in range(1, repeats+1):
                 for source in bundle_files(root, mode):
                     content_hash = digest(source)
-                    if mode == 'generic' and source == root/'SKILL.md':
+                    if mode == 'generic' and source.name == 'SKILL.md' and source.parent.name == 'oh-my-patent':
                         content_hash = hashlib.sha256(baseline.encode('utf-8')).hexdigest()
                     if content_hash in hidden_hashes:
                         raise ValueError('hidden answer or cross-split material leaked into shared bundle')
@@ -152,7 +160,7 @@ def prepare_suite(root, cases_path, out, *, modes=('generic', 'domain'), selecte
                 for source in bundle_files(root, mode):
                     dest = work/'bundle'/source.relative_to(root)
                     dest.parent.mkdir(parents=True, exist_ok=True)
-                    if mode == 'generic' and source == root/'SKILL.md':
+                    if mode == 'generic' and source.name == 'SKILL.md' and source.parent.name == 'oh-my-patent':
                         dest.write_text(baseline, encoding='utf-8')
                     else:
                         shutil.copyfile(source, dest)
@@ -175,7 +183,7 @@ def prepare_suite(root, cases_path, out, *, modes=('generic', 'domain'), selecte
                         materials.append({'id': doc['id'], 'role': doc['role'], 'kind': doc['kind'],
                                           'version': doc['version'], 'path': dest.relative_to(work).as_posix(),
                                           'sha256': doc['sha256']})
-                payload = {'request': case['request'], 'skill_root': 'bundle', 'entrypoint': 'bundle/SKILL.md',
+                payload = {'request': case['request'], 'skill_root': 'bundle', 'entrypoint': 'bundle/skills/oh-my-patent/SKILL.md',
                            'materials': materials}
                 write_json(work/'task.json', payload, exclusive=True)
                 prompt = ('读取 task.json 和其中的 Skill 入口，按请求完成可支持的工作或具体列出缺口。'

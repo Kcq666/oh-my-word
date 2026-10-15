@@ -1,403 +1,80 @@
-# oh-my-patent
+# oh-my-word / word-skills
 
-维护模块、使用真实改稿和执行对照评测：见 [维护工具](docs/skills-maintenance.md)。`check_skills.py` 只测结构；`patent_lab.py` 支持案卷校验、Word 修订对照、资料需求清单与实际模型执行记录。领域质量提升仍需真实案卷和专业评分验证。
+`word-skills` 是一个可安装的 Word Skills monorepo：它把中文技术文档制作、可追溯的 Word 交付和既有中国专利审阅稿工具放在同一套可验证的来源、渲染与交付边界中。
 
-运行 `python tools/check_skills.py` 检查技能包结构；行为效果按 [评测协议](references/skill-evaluation.md) 单独验证。
+当前实现包括：
 
-> **通用专利工作流，按需组合领域子 Skill，输出可追溯的审阅稿。**
+- `word-skills`：总入口、技能注册表和确定性路由；
+- `oh-my-technology`：`technical-report` 与 `design-spec` 两种 JSON 中间稿模式；
+- `word-document`：基本单节样式与受限 `docxtpl` 插槽模板；
+- `oh-my-patent`：原有发明、实用新型、外观设计 CLI、六个领域模块和 final/handoff 门禁。
 
-从技术材料到中国专利申请审阅稿：事实溯源、内容一致性审查、形式检查与 Word 输出。v0.2.0 新增官方 XML 转换交接包；2026 年正式电子申请按规定采用 XML，DOCX 用于审阅和转换，不能直接作为正式正文电子提交。
+项目申报、软件著作权，以及需求、接口、测试、用户和运维五种技术文档模式已经登记为 `planned`，不会用空目录伪装成已实现能力。目标架构、依赖方向与阶段验收见 [docs/02-architecture.md](docs/02-architecture.md)、[docs/03-roadmap.md](docs/03-roadmap.md) 和 [registry/skills.yaml](registry/skills.yaml)。
 
-当前能力与完整工作流见 [SKILL.md](SKILL.md)，[2026 规则](references/cnipa-2026.md) 和 [证据契约](references/evidence-contract.md)。
-Word 输出保留 WPS/Office 兼容处理；本轮渲染验证使用 LibreOffice，未实测 Windows 下两者所有版本的版面。
+## 安装
 
-支持**发明**、**实用新型**、**外观设计**三种专利类型。
+需要 Python 3.10+。基础安装包含专利和技术文档的结构检查、Word 生成与来源校验；读取 DOCX/PDF 材料和插槽模板使用可选依赖。
 
-总览入口使用通用模板，按技术贡献加载软件/AI、机械、电子通信、化学材料、生物医药等领域模块；外观设计另有文书专用模块。跨领域案件可组合加载。见 [领域目录](references/domain-catalog.md) 和 [通用模板](references/general-drafting-template.md)。这些是 Agent 按路径读取的流程文件，不能据此推定宿主自动发现、模型已训练或生成质量已提升；行为评测方法见 [评测协议](references/skill-evaluation.md)。
-
----
-
-## 它解决什么问题
-
-专利撰写是一件「创造性工作」与「机械格式工作」各占一半的事。前者必须由人
-（或 AI）完成，后者完全是体力活：
-
-| 机械格式工作 | 具体要求 |
-| --- | --- |
-| 纸张与页边距 | A4，上 25mm / 左 25mm / 右 15mm / 下 15mm |
-| 字体字号 | 宋体、仿宋或楷体；审阅稿默认12pt，实际字高另核对 |
-| 行距 | 审阅稿默认1.5倍；纸件毫米间距与转换结果另核对 |
-| 章节结构 | 严格按技术领域 → 背景技术 → 发明内容 → 附图说明 → 具体实施方式 |
-| 摘要字数 | 不超过 300 字 |
-| 权利要求编号 | 阿拉伯数字连续编号，独权在前 |
-| 名称限制 | 不超过 25 字，不含「专利」「新型」「改进」等词 |
-
-更麻烦的是**跨软件兼容**：同一份文件在 WPS 里排版正常，到了 Office 里可能字距
-变了、断页位置全变；反过来也一样。根因是 `python-docx` 的默认模板用**主题引用**
-（`w:eastAsiaTheme="minorEastAsia"`）声明字体，而主题文件里 `<a:ea typeface=""/>`
-是空的，中文字体只写在按脚本区分的 `<a:font script="Hans"/>` 里——到底解析成什么
-字体，完全由各软件自行决定。
-
-本项目把这两件事都做掉了：**格式由代码保证，兼容性由代码保证。**
-
----
-
-## 快速开始
-
-```bash
-# 只依赖两个纯 Python 包，不需要编译器
-pip install -r requirements.txt
-
-# ① 材料是 Word / PPT 的话，先转成可读的文本（可选依赖，见「读材料」一节）
-python tools/patent.py ingest 材料目录/ -o outputs/scan/我的案子/
-
-# ② 生成一份稿件骨架（发明 / 实用新型 / 外观设计）
-python tools/patent.py template invention -o 我的稿件.md
-
-# ③ 填好内容后先自检，确认没有格式硬伤
-python tools/patent.py lint 我的稿件.md
-
-# ④ 生成申请文件
-python tools/patent.py build 我的稿件.md -o 申请文件.docx
+```powershell
+python -m pip install -e ".[dev,ingest,templates]"
+python -m word_skills skills list --json
+python tools/check_word_skills.py
 ```
 
-也可以不安装依赖，直接指定解释器运行 `tools/patent.py`。
+安装包不包含真实案卷、`outputs/`、本机证据、LibreOffice、Poppler 或字体。完整 monorepo 是受支持的 Skill 安装形态，不能只复制一个 `SKILL.md` 就声称共享资源已安装。
 
-`build` 会自动先跑一遍自检并把结果打出来。加 `--strict` 可以在自检不通过时
-拒绝生成文件，适合放进自动化流程：
+## 总入口与路由
 
-```bash
-python tools/patent.py build 我的稿件.md -o 申请文件.docx --strict
+```powershell
+python -m word_skills route "请写一份技术报告" --json
+python -m word_skills route "只调整 Word 页眉和页码" --json
+python -m word_skills route "请准备项目申报书" --json
 ```
 
----
+路由结果只声明登记状态。若命中 `planned`，需要补充材料或等待对应阶段实现；路由器不会自动写正文。
 
-## 读材料（Word / PPT → Markdown）
+## 技术文档与 Word 交付
 
-写交底书之前，手里通常已经有一堆现成材料：立项报告、技术方案、评审 PPT、
-测试记录。它们大多是 `.docx` / `.pptx`。Agent 读不了二进制，必须先转成文本。
+将 `skills/oh-my-technology/SKILL.md` 和 `skills/word-document/SKILL.md` 交给 Agent，阅读来源后填写 JSON 中间稿和证据账本，再运行：
 
-```bash
-# 整个目录递归转换（每个源文件生成一个同名 .md，旁边配一个 _media/ 放图）
-python tools/patent.py ingest 材料目录/ -o outputs/scan/我的案子/
-
-# 单份文件，结果直接打到标准输出
-python tools/patent.py ingest 交底书.docx
-
-# 单份转换脚本（与上面等价，参数更直白）
-python tools/docx_to_md.py -i 交底书.docx -o 交底书.md
-python tools/pptx_to_md.py -i 评审.pptx  -o 评审.md
+```powershell
+python -m word_skills ingest "项目材料路径" --case "case"
+python -m word_skills template --mode technical-report --out "draft.json"
+python -m word_skills lint draft.json --case case
+python -m word_skills build draft.json --case case --out delivery --soffice "SOFFICE_EXE" --pdftoppm "PDFTOPPM_EXE"
+python -m word_skills review-init delivery
+# 实际核对正文和全部页图后，填写 delivery/audit/review.json
+python -m word_skills finalize delivery
 ```
 
-### 允许丢失，但不允许静默丢失
+`reviewed` 只表示已记录的内容和版面复核，不表示事实真实性、正式提交、受理或授权。模板支持范围、证据契约和交付状态见 `skills/word-document/references/`。
 
-这一层的目标不是「尽量多抽出文字」，而是**每一点失真都要被点名**。
-理由是失败的代价不对称：材料里少了一段公式，Agent 不会察觉——它会拿着
-缺了核心公式的文本去写权利要求，而且写得头头是道。
+## 专利兼容入口
 
-所以：
+规范入口位于 [skills/oh-my-patent/SKILL.md](skills/oh-my-patent/SKILL.md)。旧调用继续有效：
 
-- **公式不再整段消失。** 内嵌的 OMML 公式在转换**之前**就被替换成
-  `⟪公式1: E=12mv2⟫` 这样的占位文本，位置得以保留，同时产生一条告警。
-  占位里的式子是**退化**的（分式摊平、上下标掉层级），涉及时须向用户索取原式。
-- **表格还原成真正的 Markdown 表格**，行列关系不丢。
-- **读不了的东西被列出来**，不静默跳过：旧格式 `.doc` 会报错，
-  目录里的 `.pdf` / `.xls` 会一条条列出，让你知道「没读到」和「材料里没有」
-  是两件不同的事。
-- 转换结果顶部写入一段元信息（源文件、统计、告警注记），便于追溯。
-  不需要时用 `--no-header` 关掉。
-
-> **一个实测结论**：最省事的做法——直接用 `mammoth` 的 Markdown 输出——有两条
-> 静默失真。实测（mammoth 1.12.2）一份含 `E = ½mv²` 的文档，转出来的行内公式
-> 位置**只剩一个空格**，读者完全看不出这里原本有个公式；表格则被摊成一行一个
-> 单元格的段落，`参数 / 含义 / 单位 / 数值` 的行列关系全没了。所以这里改成
-> **mammoth 转 HTML → markdownify 落 Markdown**，且公式在转换前就换成占位。
-> 细节见 `oh_my_patent/ingest.py` 的模块说明。
-
-依赖是可选的，没装只影响这一步，生成申请文件的路径照常：
-
-```bash
-pip install -r requirements-ingest.txt
+```powershell
+python tools/patent.py template invention -o outputs/draft.md
+python tools/patent.py lint outputs/draft.md
+python tools/patent.py build outputs/draft.md -o outputs/review.docx --strict
+python -m word_skills patent template invention -o outputs/draft.md
 ```
 
----
+专利 Skill、prompts、references 和六个领域模块的规范路径是 `skills/oh-my-patent/`；旧的 Python 包、`tools/patent.py` 和 `oh-my-patent` 命令继续可用。专利门禁和原 Python 包没有被通用技术文档渲染器反向依赖。
 
-## 命令行
+## 验证
 
-| 子命令 | 作用 |
-| --- | --- |
-| `ingest` | Word / PPT 材料 → Markdown（需可选依赖，见上一节） |
-| `build` | 稿件 → 申请文件 `.docx` |
-| `lint` | 只做合规自检，不生成文件 |
-| `info` | 打印解析结果摘要，确认稿件被正确理解 |
-| `template` | 生成稿件骨架（Markdown 或 `.docx` 空白模板） |
-
-常用选项：
-
-```bash
-# 每个部分独立成文件（用于审阅与官方 XML 转换交接）
-python tools/patent.py build 稿件.md -o 输出目录/ --split --page-numbers
-
-# 换字体、换行距、调小标题处理方式
-python tools/patent.py build 稿件.md -o 申请文件.docx \
-  --font 仿宋 --font-size 12 --line-spacing 1.5 \
-  --subsection-style flatten
-
-# 自检结果用 JSON 输出，便于程序消费
-python tools/patent.py lint 稿件.md --json
-
-# 批量读材料，图片另存到指定目录，汇总也用 JSON
-python tools/patent.py ingest 材料/ -o outputs/scan/案子/ --media-dir 图/ --json
+```powershell
+python tools/check_word_skills.py
+python tools/check_skills.py
+python -m pytest tests -q
+python tools/check_full_dependencies.py
 ```
 
-各选项含义：
+`check_word_skills.py` 和 `check_skills.py` 只证明结构、路径和声明一致；测试证明确定性代码行为。真实写作质量、事实语义、全部 Word/WPS 版本和用户页面体验仍需按对应材料和环境独立复核。
 
-| 选项 | 说明 |
-| --- | --- |
-| `--font` | 正文字体：`宋体` / `仿宋` / `楷体`，默认宋体 |
-| `--font-size` | 正文字号（磅），默认 12（小四） |
-| `--line-spacing` | 行距倍数，默认 1.5 |
-| `--subsection-style` | `inline` 把三级小标题并入段落做引导词（默认）；`keep` 保留为独立小标题；`flatten` 只留正文 |
-| `--bold-sections` | 给 `【技术领域】` 这类章节标题加粗（默认不加粗，与公开文本一致） |
-| `--split` | 每个部分独立成文件 |
-| `--page-numbers` | 页脚居中加页码 |
-| `--strict` | 自检有错误时拒绝生成 |
-| `--type` | 覆盖稿件里写的专利类型 |
+`check_full_dependencies.py` 使用同一解释器执行 pytest 全部测试并记录依赖版本、测试数和跳过项；缺依赖、失败、skip、xfail 或 xpass 均使验收失败。报告保存在本地 `outputs/acceptance/`。
 
-`ingest` 的选项：
+## 许可与来源
 
-| 选项 | 说明 |
-| --- | --- |
-| `-o` | 输出目录，每个源文件生成一个同名 `.md`；省略时打到标准输出 |
-| `--media-dir` | 图片输出目录，默认「与 `.md` 同级的 `{名字}_media`」 |
-| `--no-images` | 不导出图片，只在正文留下位置提示 |
-| `--no-header` | 不在 `.md` 顶部写入转换元信息与告警注记 |
-| `--json` | 汇总以 JSON 输出（转了几个、跳了哪些、有多少告警） |
-
----
-
-## 稿件格式
-
-稿件是**带 YAML frontmatter 的 Markdown**。AI 起草时就写这个格式，
-人也一样好读好改。
-
-```markdown
----
-title: 一种基于边缘计算的智能水表数据采集方法
-type: invention
-applicant: 示例科技有限公司
-inventors: [张三, 李四]
----
-
-# 权利要求书
-
-1. 一种基于边缘计算的智能水表数据采集方法，其特征在于，包括以下步骤：……
-2. 根据权利要求1所述的方法，其特征在于，……
-
-# 说明书
-
-## 技术领域
-本发明涉及供水管网计量与数据处理技术领域。
-
-## 背景技术
-现有方案……
-
-## 发明内容
-
-### 要解决的技术问题
-本发明要解决的技术问题是……
-
-### 技术方案
-为解决上述技术问题，本发明提供……
-
-### 有益效果
-本发明的有益效果是……
-
-## 附图说明
-图1为本发明实施例提供的结构示意图。
-
-## 具体实施方式
-参照图1，本实施例……
-
-# 摘要
-本发明公开……
-```
-
-### 宽容之处
-
-解析层是**宽容优先**的，下面这些写法都能吃进来：
-
-- **章节标记**：`## 技术领域`、`【技术领域】`、`一、技术领域`、`技术领域：` 都认
-- **`【技术领域】` 后紧跟正文**在同一行也没问题
-- **发明内容**：三小标题分开写（三段式）或整段连写（连写式）都支持
-- **权利要求**：`1.` / `1、` / `（1）` 三种编号都认；项内手工换行会自动合并；
-  完全没有编号时按空行分段并自动补编号
-- **代码围栏内的 `#`** 不会被当成标题，含 `#` 的化学式、代码片段不会破坏结构
-- **无法归类的章节**收进 `extra_sections` 保留，不静默丢弃内容
-
-### 结构化输入
-
-`.yaml` / `.json` 稿件也可以，字段名与模型对齐，中英文键名都接受：
-
-```yaml
-title: 一种测试装置
-type: utility
-claims:
-  - 一种测试装置，其特征在于，包括壳体。
-technical_field: 本实用新型涉及测试装置技术领域。
-drawings:
-  - {number: 1, caption: 图1为本实用新型的结构示意图。, path: 图1.png}
-```
-
----
-
-## 合规自检
-
-自检**不做实质审查**。新颖性、创造性、说明书是否充分公开，这些必须由人判断，
-静态检查做不了也不该假装能做。
-
-它只查**形式与格式上的硬性要求**——这类问题量大、机械，一旦漏过就会收到补正
-通知书，正是最该交给机器的部分。
-
-检查项涵盖：
-
-- **名称**：字数上限（25 / 40 字两档）、禁用词、标点、外观设计的冗余措辞
-- **权利要求**：编号连续性、独权位置、从属权利要求的引用方向、含义不确定的
-  用语（「最好是」「例如」）、引用说明书或附图、插图
-- **实用新型专项**：必须有附图；不得含方法权利要求
-- **说明书**：五个章节是否齐全、排列顺序、正文引用的图号是否存在、
-  附图是否有对应说明
-- **摘要**：300 字上限、商业性宣传用语
-- **外观设计专项**：用途 / 设计要点 / 代表图是否齐备、是否有图片
-- **全稿**：残留占位符（`XXX`、`待补充`、`TODO` 等）——AI 起草最容易踩的坑
-
-结果分三级：
-
-| 级别 | 含义 |
-| --- | --- |
-| `ERROR` | 几乎必然导致补正或不予受理，必须改 |
-| `WARNING` | 形式可接受，但实务中会被审查员指出，建议改 |
-| `INFO` | 提示性信息，供人工复核 |
-
-> **一个刻意的取舍**：多项独立权利要求（例如「方法 + 装置」双独权）报
-> `WARNING` 而不是 `ERROR`。国知局官方答复与《审查指南》第二部分第六章
-> 2.2.1 都确认，符合单一性时可以撰写两项以上独立权利要求，只提示复核
-> 单一性，不判错。
-
----
-
-## WPS / Office 双适配
-
-这是本项目的重点，也是 `oh_my_patent/oxml.py` 存在的全部理由。
-
-**问题**：`python-docx` 的默认模板继承 Word 的主题机制，字体写成主题引用；
-主题文件里 `<a:ea typeface=""/>` 是空的，中文字体只在
-`<a:font script="Hans" typeface="宋体"/>` 里。结果就是同一份文件在 Office 与
-WPS 里解析出不同字体、不同字宽、不同断行位置，中文文书整体「串行」，页数变化。
-
-**做法**：把主题依赖**换成显式声明**——
-
-1. **去主题化**。所有 `w:asciiTheme` / `w:eastAsiaTheme` / `w:themeColor` 等
-   主题引用，全部替换成显式字体名与纯黑色。覆盖 `styles.xml`、`document.xml`、
-   各节属性，以及 python-docx 不解析的 `stylesWithEffects.xml`（它是
-   `styles.xml` 的完整副本，只清一处会整份漏掉）。
-2. **补全字体声明**。每个 run 的 `w:rFonts` 同时写死 `ascii` / `hAnsi` /
-   `eastAsia` / `cs` 四项，并设 `w:hint="eastAsia"`。
-3. **显式声明默认值**。`docDefaults` 补上 `w:eastAsia`；`settings.xml` 写死
-   `compatibilityMode=15`（缺失时 WPS 可能按 Word 2003 兼容模式排版）；
-   关闭文档网格（启用行网格时行距会被吸附，而两个软件的吸附算法不同）。
-4. **不用自动编号**。权利要求编号用纯文本而不是 `w:numPr`——WPS 对
-   `numbering.xml` 的实现与 Office 有差异，会把编号渲染成圆点或错位。
-5. **严守 schema 顺序**。`w:rPr` / `w:pPr` 的子元素顺序按 ECMA-376 插入。
-   顺序错了 WPS 照样打开，Office 却可能报「文件已损坏」——这个不对称是
-   排查兼容问题时最容易踩的坑。
-
----
-
-## 项目结构
-
-```
-oh-my-patent/
-├── SKILL.md          Agent Skill 入口：编排与路由
-├── prompts/          分步指令（渐进式披露，用到哪步读哪份）
-│   ├── 01-intake.md ~ 07-self-check.md
-│   └── iteration/    迭代修订（prompt 工作流）
-├── oh_my_patent/     分层 Python 包：真正的逻辑
-│   ├── spec.py       版面规范常量（法规要求集中在此，便于审阅调整）
-│   ├── schema.py     数据模型 + 权利要求分段
-│   ├── parser.py     稿件解析（Markdown / YAML / JSON → 模型）
-│   ├── ingest.py     材料读取层（Word / PPT → Markdown，失真会点名）
-│   ├── lint.py       合规自检
-│   ├── lint_ai.py    AI 类发明的专门自检
-│   ├── report.py     自检结果类型（两组检查共用）
-│   ├── oxml.py       OOXML 底层修补（WPS / Office 双适配）
-│   ├── cli.py        命令行入口
-│   └── render/
-│       └── docx.py   渲染成 .docx
-├── tools/            对外脚本（薄，逻辑都在包里）
-│   ├── patent.py     统一入口
-│   ├── docx_to_md.py 单份 Word 转换
-│   └── pptx_to_md.py 单份 PPT 转换
-├── docs/             格式规范与设计文档
-├── examples/         可直接跑的示例稿件
-├── tests/            XML 层与读取层的验收测试
-└── outputs/          产物（gitignore）
-```
-
-分层原则：**模型只描述「文书是什么」，不掺杂排版细节。** 版面规则集中在
-`spec` 与 `oxml`，因此将来要加 PDF 或纯文本输出，只需在 `render` 下新增模块，
-解析层与模型层不必改动。
-
-`tools/` 下只有薄脚本，真正的逻辑留在 `oh_my_patent/` 包里——这样既符合
-Agent Skill 的调用习惯，又保住了可测试性。
-
-依赖也是分层的，而且这条线是刻意划的：**读取用第三方库，生成保持不依赖外部服务。**
-
-| 路径 | 依赖 |
-| --- | --- |
-| `ingest` / `docx_to_md.py` / `pptx_to_md.py` | `mammoth` + `markdownify` + `python-pptx`（`requirements-ingest.txt`） |
-| `build` / `lint` / `info` / `template` | 只要 `python-docx` + `PyYAML`（`requirements.txt`） |
-
-理由是：只有「生成 .docx」这条路径不依赖外部服务，「生成的 XML 合法」才能靠纯
-Python 单测守住。多引入一个外部渲染器，就多一处测不到的黑盒——那正是本项目
-要与「打开看一眼」式验证拉开距离的地方。
-
----
-
-## 测试
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-测试的重点不是「能生成文件」，而是**生成的文件在 XML 层面是合法的**：
-把 `.docx` 当 zip 拆开，逐项校验 XML 良构性、Content-Types 完整性、
-关系可达性、元素顺序、页边距换算、主题引用是否清零。理由很直接：
-WPS 对 OOXML 相当宽容，Office 却严格按 schema 校验——只在 WPS 里点开
-看一眼，根本发现不了这类问题。
-
-材料读取层（`test_ingest.py`）守的是另一条线——**转换不会静默失真**：
-公式必须变成显式占位而不是凭空消失，表格必须还原成合法 Markdown 表格，
-读不了的格式必须被一条条点名。**丢内容比报错危险得多**：报错你会知道，
-丢了内容它不会说。
-
----
-
-## 边界声明
-
-- 本工具**不生成请求书**，也不代替代理师。产出的是说明书、权利要求书、摘要、
-  附图、简要说明这些**文稿主体**。
-- 自检是**形式检查**，不构成任何形式的专利性意见。
-- 正式提交前请由具备资格的专利代理师审阅。
-
-## 许可
-
-MIT
-
-
-## v0.2.0 审阅交付
-
-先建立 TECH_FACTS.json，再 review-init 并实际完成内容审查，运行 build --final 或 handoff。命令见 SKILL.md。strict 仅阻止形式 ERROR；final 额外拒绝缺图、未闭合审查、未知事实引用和过期证据，且不能 force。官方 XML 转换和实际提交尚需执行，不保证受理或授权。
-
-
-渲染中文稿件需要中文字体。Windows通常已有宋体；Linux需安装可用中文字体后预览。复杂LaTeX/摄入退化公式不支持自动恢复，final会拒绝已识别的原始公式语法；请核对原式并使用经验证的公式编辑/官方复杂对象路径。简单Markdown表格生成原生Word表格。
+代码使用 MIT 许可。共享写作规则、依赖、固定来源和改编范围见 [THIRD_PARTY.md](THIRD_PARTY.md)。官方 Word 转 XML 工具只是专利交接路径的外部依赖，不随仓库发布，也不由本项目自动提交文件。

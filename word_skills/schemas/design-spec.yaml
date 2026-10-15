@@ -1,0 +1,10 @@
+schema_version: 1
+mode: design-spec
+title: 设计说明
+required_sections:
+  requirements: 需求与范围
+  constraints: 设计约束
+  architecture: 总体架构与模块
+  interfaces: 数据与接口
+  deployment: 部署与异常处理
+  acceptance: 验收与风险

@@ -1,0 +1,45 @@
+schema_version: 1
+repository: word-skills
+skills:
+  - name: word-skills
+    path: skills/word-skills/SKILL.md
+    kind: router
+    status: implemented
+    modes: [routing, composition]
+    dependencies: [oh-my-technology, oh-my-patent, word-document]
+    evidence: [tests/test_word_skills.py]
+  - name: oh-my-technology
+    path: skills/oh-my-technology/SKILL.md
+    kind: business
+    status: implemented
+    modes: [technical-report, design-spec]
+    dependencies: [word-document]
+    evidence: [tests/test_pipeline.py]
+  - name: oh-my-patent
+    path: skills/oh-my-patent/SKILL.md
+    kind: business
+    status: implemented
+    modes: [invention, utility, design, disclosure, application-handoff]
+    dependencies: []
+    evidence: [tests/test_final_gate.py, tests/test_skill_bundle.py]
+  - name: word-document
+    path: skills/word-document/SKILL.md
+    kind: production
+    status: implemented
+    modes: [docx-layout, template-style, template-slots]
+    dependencies: []
+    evidence: [tests/test_pipeline.py]
+  - name: oh-my-proposal
+    path: null
+    kind: business
+    status: planned
+    modes: [proposal, feasibility, budget]
+    dependencies: [word-document]
+    evidence: []
+  - name: oh-my-copyright
+    path: null
+    kind: business
+    status: planned
+    modes: [software-copyright, source-material, user-manual]
+    dependencies: [word-document]
+    evidence: []

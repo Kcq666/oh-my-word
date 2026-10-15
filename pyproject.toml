@@ -3,11 +3,11 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "oh-my-patent"
+name = "word-skills"
 version = "0.2.0"
-description = "自动化专利 SKILL，同时适配 WPS、Office。"
+description = "Evidence-bound Chinese technical documents, Word delivery, and a compatible patent workflow."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "open-agent-power" }]
 keywords = ["patent", "docx", "wps", "office", "agent-skill", "专利"]
@@ -20,6 +20,9 @@ classifiers = [
 dependencies = [
     "python-docx>=1.1.0",
     "PyYAML>=6.0",
+    "pdfplumber>=0.11.9",
+    "pypdf>=6",
+    "defusedxml>=0.7",
 ]
 
 [project.optional-dependencies]
@@ -27,16 +30,29 @@ dependencies = [
 # 生成 .docx 的路径一行都不会 import 它们——所以它们是可选而不是必装。
 # 装上：pip install -e ".[ingest]"，或 pip install -r requirements-ingest.txt
 ingest = [
+    "markitdown[docx,pdf]>=0.1.8,<0.2",
     "mammoth>=1.8",       # .docx → HTML（它自己的 Markdown 输出会丢公式与表格）
     "markdownify>=0.13",  # HTML → Markdown，补上 mammoth 缺的表格还原
     "python-pptx>=1.0",   # .pptx 按页抽取
 ]
 
+templates = [
+    "docxtpl>=0.20.2,<0.21",
+    "docxcompose>=1.4,<2",
+]
+
+dev = ["pytest>=8,<10"]
+
 [project.scripts]
+word-skills = "word_skills.cli:main"
 oh-my-patent = "oh_my_patent.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/open-agent-power/oh-my-patent"
+Homepage = "https://github.com/open-agent-power/oh-my-word"
+Repository = "https://github.com/open-agent-power/oh-my-word.git"
 
-[tool.setuptools]
-packages = ["oh_my_patent", "oh_my_patent.render"]
+[tool.setuptools.packages.find]
+include = ["oh_my_patent*", "word_skills*"]
+
+[tool.setuptools.package-data]
+word_skills = ["schemas/*.yaml", "data/*.yaml"]

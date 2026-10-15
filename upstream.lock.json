@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-10-15",
+  "scope": "Sources actually adapted into this repository and direct runtime packages exercised in the local acceptance environment. Research candidates are recorded separately in docs/upstream-sources.json.",
+  "adapted_sources": [
+    {
+      "repository": "Fenng/Tech-Doc-Style-Chinese",
+      "commit": "b119d01c9bb7cd132b3c62fafdff34227c4410d1",
+      "license": "MIT",
+      "source_files": ["SKILL.md"],
+      "license_file": "third_party/licenses/fenng-MIT.txt",
+      "destination_files": ["shared/references/chinese-writing.md"],
+      "adaptation": "Selected fact-preservation, terminology-consistency and literal identifier guidance; omitted personal punctuation preferences.",
+      "verification": "Destination and attribution reviewed; no upstream executable code imported."
+    },
+    {
+      "repository": "riekelt/technical-writer",
+      "commit": "85e53729dd959a2795d593d6769068e342cf3486",
+      "license": "MIT",
+      "source_files": ["plugins/technical-writer/skills/writing-design-docs/SKILL.md"],
+      "license_file": "third_party/licenses/technical-writer-MIT.txt",
+      "destination_files": ["skills/oh-my-technology/references/design-spec.md"],
+      "adaptation": "Condensed the distinction between observed facts and proposals, and the review of choices, costs and residual risks; did not adopt English style constraints.",
+      "verification": "Destination and attribution reviewed; no upstream executable code imported."
+    }
+  ],
+  "runtime_packages": [
+    {"package": "python-docx", "role": "required", "tested_version": "1.2.0"},
+    {"package": "PyYAML", "role": "required", "tested_version": "6.0.3"},
+    {"package": "pdfplumber", "role": "required", "tested_version": "0.11.9"},
+    {"package": "pypdf", "role": "required", "tested_version": "6.10.0"},
+    {"package": "defusedxml", "role": "required", "tested_version": "0.7.1"},
+    {"package": "markitdown", "role": "optional-ingest", "tested_version": "0.1.8"},
+    {"package": "mammoth", "role": "optional-ingest", "tested_version": "1.11.0"},
+    {"package": "markdownify", "role": "optional-ingest", "tested_version": "1.2.3"},
+    {"package": "python-pptx", "role": "optional-ingest", "tested_version": "1.0.2"},
+    {"package": "docxtpl", "role": "optional-templates", "tested_version": "0.20.2"},
+    {"package": "docxcompose", "role": "optional-templates", "tested_version": "1.4.1"}
+  ],
+  "notes": "Package versions are an acceptance snapshot, not a transitive dependency lock or a claim that upstream repository commits correspond to the installed distributions. Installation constraints remain in pyproject.toml. No fonts or external office converters are bundled."
+}

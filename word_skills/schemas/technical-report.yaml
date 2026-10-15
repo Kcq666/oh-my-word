@@ -1,0 +1,10 @@
+schema_version: 1
+mode: technical-report
+title: 技术报告
+required_sections:
+  background: 背景与范围
+  objectives: 技术目标
+  methods: 方法与依据
+  implementation: 实施与关键技术
+  results: 验证结果与局限
+  risks: 风险与结论

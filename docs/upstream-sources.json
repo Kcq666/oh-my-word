@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "researched_on": "2026-10-15",
+  "timezone": "Asia/Shanghai",
+  "status": "research_candidates_not_dependency_lock",
+  "external_repository_count": 9,
+  "local_baseline": {
+    "path": "original oh-my-patent workspace",
+    "head": "d6c6b8d603fa96cf67f95ff9a7fcb716d5e3eb48",
+    "dirty": true,
+    "skill_files": 7,
+    "python_package_files": 18,
+    "test_files": 10,
+    "tests_run": false
+  },
+  "repositories": [
+    {
+      "repository": "Fenng/Tech-Doc-Style-Chinese",
+      "commit": "b119d01c9bb7cd132b3c62fafdff34227c4410d1",
+      "license": "MIT",
+      "license_evidence": "LICENSE",
+      "reviewed_paths": [
+        "SKILL.md",
+        "LICENSE"
+      ],
+      "depth": "Skill opening sections and license read; code not executed",
+      "decision": "Adapt selected fidelity and terminology guidance with attribution",
+      "url": "https://github.com/Fenng/Tech-Doc-Style-Chinese",
+      "pinned_tree_url": "https://github.com/Fenng/Tech-Doc-Style-Chinese/tree/b119d01c9bb7cd132b3c62fafdff34227c4410d1",
+      "imported": false,
+      "tested": false
+    },
+    {
+      "repository": "K-Dense-AI/scientific-agent-skills",
+      "previous_repository": "K-Dense-AI/claude-scientific-skills",
+      "commit": "a1043ef544e3a100c28e70a736b6cf32554d0677",
+      "license": "MIT",
+      "license_evidence": "LICENSE.md and selected skill frontmatter",
+      "reviewed_paths": [
+        "LICENSE.md",
+        "skills/research-grants/SKILL.md",
+        "skills/scientific-writing/SKILL.md"
+      ],
+      "depth": "Tree, license and first 80 lines of each selected skill read; linked references not audited",
+      "decision": "Adapt requirement mapping and evidence workflow; localize target programs",
+      "url": "https://github.com/K-Dense-AI/scientific-agent-skills",
+      "pinned_tree_url": "https://github.com/K-Dense-AI/scientific-agent-skills/tree/a1043ef544e3a100c28e70a736b6cf32554d0677",
+      "imported": false,
+      "tested": false
+    },
+    {
+      "repository": "Fokkyp/SoftwareCopyright-Skill",
+      "commit": "947d5963194bfda8ce57b8b454b486f13359dee4",
+      "license": "MIT",
+      "license_evidence": "LICENSE",
+      "reviewed_paths": [
+        "LICENSE",
+        "software-copyright-materials/SKILL.md",
+        "software-copyright-materials/scripts/extract_code_material.py"
+      ],
+      "depth": "Skill opening 105 lines, script imports/functions/key lines, license and tree read; full code audit and execution pending",
+      "decision": "Candidate for source selection and traceability; do not import the entire OfficeCLI workflow",
+      "url": "https://github.com/Fokkyp/SoftwareCopyright-Skill",
+      "pinned_tree_url": "https://github.com/Fokkyp/SoftwareCopyright-Skill/tree/947d5963194bfda8ce57b8b454b486f13359dee4",
+      "imported": false,
+      "tested": false
+    },
+    {
+      "repository": "anthropics/skills",
+      "commit": "dbd4588f9e1033efb41dad4bef2f7947c8993d44",
+      "license": "Mixed; directory-specific",
+      "license_evidence": "README.md and skills/docx/LICENSE.txt; no standalone license found for doc-coauthoring",
+      "reviewed_paths": [
+        "README.md",
+        "skills/doc-coauthoring/SKILL.md",
+        "skills/docx/LICENSE.txt",
+        "THIRD_PARTY_NOTICES.md"
+      ],
+      "depth": "Doc coauthoring workflow and DOCX license read; third party notices opening only; DOCX implementation not audited",
+      "decision": "Doc coauthoring method comparison only until permission clarified; exclude proprietary DOCX source",
+      "url": "https://github.com/anthropics/skills",
+      "pinned_tree_url": "https://github.com/anthropics/skills/tree/dbd4588f9e1033efb41dad4bef2f7947c8993d44",
+      "imported": false,
+      "tested": false
+    },
+    {
+      "repository": "yanhaoluo0/technical-proposal-expert-writing-skill",
+      "commit": "22eb0615823cdd5b69d96541ea610736121732ba",
+      "license": null,
+      "license_evidence": "No license returned by GitHub; no license file found in recursive tree",
+      "reviewed_paths": [
+        "SKILL.md",
+        "README.md"
+      ],
+      "depth": "First 105 skill lines and README search excerpt; repository tree inspected",
+      "decision": "Comparison only; do not copy code or text without a clear license",
+      "url": "https://github.com/yanhaoluo0/technical-proposal-expert-writing-skill",
+      "pinned_tree_url": "https://github.com/yanhaoluo0/technical-proposal-expert-writing-skill/tree/22eb0615823cdd5b69d96541ea610736121732ba",
+      "imported": false,
+      "tested": false
+    },
+    {
+      "repository": "python-openxml/python-docx",
+      "commit": "e45454602b53e8e572b179ccf1c91093ec9f4ed7",
+      "license": "MIT",
+      "license_evidence": "LICENSE",
+      "reviewed_paths": [
+        "LICENSE"
+      ],
+      "depth": "Repository description and license read; existing local integration inspected",
+      "decision": "Retain as core dependency; package version must be pinned and tested at implementation",
+      "url": "https://github.com/python-openxml/python-docx",
+      "pinned_tree_url": "https://github.com/python-openxml/python-docx/tree/e45454602b53e8e572b179ccf1c91093ec9f4ed7",
+      "imported": false,
+      "tested": false
+    },
+    {
+      "repository": "elapouya/python-docx-template",
+      "commit": "1f143fbe86c19ecb28c3205d5f4b1547c7e2d7ad",
+      "license": "LGPL-2.1",
+      "license_evidence": "LICENSE.txt and GitHub API",
+      "reviewed_paths": [
+        "LICENSE.txt"
+      ],
+      "documentation": [
+        "https://docxtpl.readthedocs.io/en/latest/index.html"
+      ],
+      "depth": "License opening and official template restrictions via Context7 read; no execution",
+      "decision": "Optional template dependency, with distribution review and template tests",
+      "url": "https://github.com/elapouya/python-docx-template",
+      "pinned_tree_url": "https://github.com/elapouya/python-docx-template/tree/1f143fbe86c19ecb28c3205d5f4b1547c7e2d7ad",
+      "imported": false,
+      "tested": false
+    },
+    {
+      "repository": "microsoft/markitdown",
+      "commit": "4cc9fa17653d695d64fb9eee5b33d4de55ff84e8",
+      "license": "MIT",
+      "license_evidence": "GitHub API identification; full license audit pending integration",
+      "reviewed_paths": [
+        "README.md"
+      ],
+      "depth": "README positioning, formats and optional dependency sections read",
+      "decision": "Optional ingest adapter after loss-detection comparison",
+      "url": "https://github.com/microsoft/markitdown",
+      "pinned_tree_url": "https://github.com/microsoft/markitdown/tree/4cc9fa17653d695d64fb9eee5b33d4de55ff84e8",
+      "imported": false,
+      "tested": false
+    },
+    {
+      "repository": "jgm/pandoc",
+      "commit": "35742c0001ab2da45cebae1c37eacc2439f147ed",
+      "license": "GPL-2.0-or-later (README); GitHub API reports GPL-2.0",
+      "license_evidence": "README.md license badge; full distribution audit pending integration",
+      "reviewed_paths": [
+        "README.md"
+      ],
+      "depth": "README format and license excerpts read; binary not installed or executed",
+      "decision": "Optional external converter candidate; no bundled binary planned",
+      "url": "https://github.com/jgm/pandoc",
+      "pinned_tree_url": "https://github.com/jgm/pandoc/tree/35742c0001ab2da45cebae1c37eacc2439f147ed",
+      "imported": false,
+      "tested": false
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Word 文档制作"
+  short_description: "将有依据的内容排成 Word 文档并核对模板预览与交付清单"
+  default_prompt: "使用 $word-document 将稿件制作成 Word 并检查全部预览页面。"

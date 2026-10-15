@@ -16,9 +16,12 @@ class SkillBundleTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        for name in ('domains', 'references', 'prompts', 'evals', 'docs'):
+        shutil.copytree(ROOT / 'skills', self.root / 'skills')
+        for name in ('evals', 'docs'):
             shutil.copytree(ROOT / name, self.root / name)
-        for name in ('SKILL.md', 'README.md'):
+        shutil.copytree(ROOT / 'shared', self.root / 'shared')
+        shutil.copytree(ROOT / 'registry', self.root / 'registry')
+        for name in ('README.md', 'THIRD_PARTY.md', 'requirements.txt', 'requirements-ingest.txt'):
             shutil.copyfile(ROOT / name, self.root / name)
 
     def test_complete_bundle(self):
@@ -27,7 +30,7 @@ class SkillBundleTests(unittest.TestCase):
         self.assertEqual(counts['skills'], 7)
 
     def test_missing_shared_dependency(self):
-        (self.root / 'references/general-drafting-template.md').unlink()
+        (self.root / 'skills/oh-my-patent/references/general-drafting-template.md').unlink()
         errors, _ = CHECK.check(self.root)
         self.assertTrue(any('broken link' in e for e in errors))
 
@@ -40,12 +43,12 @@ class SkillBundleTests(unittest.TestCase):
         self.assertTrue(any('conflicting' in e for e in CHECK.check(self.root)[0]))
 
     def test_undocumented_domain(self):
-        path = self.root / 'references/domain-catalog.md'
+        path = self.root / 'skills/oh-my-patent/references/domain-catalog.md'
         path.write_text('', encoding='utf-8')
         self.assertTrue(any('absent from catalog' in e for e in CHECK.check(self.root)[0]))
 
     def test_invalid_metadata(self):
-        path = self.root / 'domains/patent-software-ai/SKILL.md'
+        path = self.root / 'skills/oh-my-patent/domains/patent-software-ai/SKILL.md'
         path.write_text('# No metadata', encoding='utf-8')
         self.assertTrue(any('frontmatter' in e for e in CHECK.check(self.root)[0]))
 

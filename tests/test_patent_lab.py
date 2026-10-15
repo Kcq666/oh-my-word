@@ -56,9 +56,10 @@ class LabTests(unittest.TestCase):
         self.folder = Path(self.tmp.name)
         self.root = self.folder/'bundle'
         self.root.mkdir()
-        for name in ('domains', 'references', 'prompts', 'docs', 'oh_my_patent', 'tools', 'evals'):
+        shutil.copytree(ROOT/'skills', self.root/'skills', ignore=shutil.ignore_patterns('__pycache__'))
+        for name in ('docs', 'oh_my_patent', 'tools', 'evals'):
             shutil.copytree(ROOT/name, self.root/name, ignore=shutil.ignore_patterns('__pycache__'))
-        for name in ('SKILL.md', 'requirements.txt', 'requirements-ingest.txt'):
+        for name in ('requirements.txt', 'requirements-ingest.txt'):
             shutil.copy2(ROOT/name, self.root/name)
 
     def card(self, name='case1', split='development', family='fam1', project='proj1', permission='local_only'):
@@ -88,7 +89,7 @@ class LabTests(unittest.TestCase):
 
     def fake_run(self, out, failed=False):
         events = [
-            {'type': 'item.completed', 'item': {'type': 'command_execution', 'command': 'Read bundle/domains/patent-mechanical/SKILL.md', 'exit_code': 0}},
+            {'type': 'item.completed', 'item': {'type': 'command_execution', 'command': 'Read bundle/skills/oh-my-patent/domains/patent-mechanical/SKILL.md', 'exit_code': 0}},
             {'type': 'item.completed', 'item': {'type': 'agent_message', 'text': '材料不足，需确认连接关系。'}},
             {'type': 'turn.failed' if failed else 'turn.completed', 'usage': {'input_tokens': 11, 'output_tokens': 7}}]
         raw = ('\n'.join(json.dumps(e, ensure_ascii=False) for e in events)+'\n').encode('utf-8')
@@ -101,7 +102,7 @@ class LabTests(unittest.TestCase):
         self.assertEqual(len(load_registry(self.root)), 6)
 
     def test_validated_without_quality_evidence_rejected(self):
-        p = self.root/'domains/registry.yaml'
+        p = self.root/'skills/oh-my-patent/domains/registry.yaml'
         data = yaml.safe_load(p.read_text(encoding='utf-8'))
         data['modules'][0]['status'] = 'validated'
         p.write_text(yaml.safe_dump(data), encoding='utf-8')
@@ -109,7 +110,7 @@ class LabTests(unittest.TestCase):
             load_registry(self.root)
 
     def test_registry_version_drift_rejected(self):
-        p = self.root/'domains/registry.yaml'
+        p = self.root/'skills/oh-my-patent/domains/registry.yaml'
         p.write_text(p.read_text(encoding='utf-8').replace("version: '1.0'", "version: '9.0'", 1), encoding='utf-8')
         with self.assertRaisesRegex(ValueError, 'mismatch'):
             load_registry(self.root)
@@ -210,7 +211,7 @@ class LabTests(unittest.TestCase):
                 if p.is_file() and p.suffix in ('.md', '.json', '.yaml', '.txt'):
                     self.assertNotIn('PRIVATE_EXPECTATION_DO_NOT_LEAK', p.read_text(encoding='utf-8'))
                     self.assertNotIn('专家答案case1', p.read_text(encoding='utf-8'))
-            self.assertEqual((work/'bundle/domains').exists(), task['mode'] == 'domain')
+            self.assertEqual((work/'bundle/skills/oh-my-patent/domains').exists(), task['mode'] == 'domain')
 
     def test_task_drift_rejected(self):
         _, suite = self.suite()
@@ -221,15 +222,15 @@ class LabTests(unittest.TestCase):
 
     def test_answer_in_shared_reference_rejected(self):
         card = self.card()
-        shutil.copy2(card.parent/'answer.md', self.root/'references/existing-writing-example.md')
+        shutil.copy2(card.parent/'answer.md', self.root/'skills/oh-my-patent/references/existing-writing-example.md')
         with self.assertRaisesRegex(ValueError, 'shared bundle'):
             self.suite(card)
 
     def test_baseline_preserves_shared_orchestration(self):
         _, suite = self.suite()
-        source = (self.root/'SKILL.md').read_text(encoding='utf-8')
+        source = (self.root/'skills/oh-my-patent/SKILL.md').read_text(encoding='utf-8')
         for task in suite['tasks']:
-            entry = (Path(task['workspace'])/'bundle/SKILL.md').read_text(encoding='utf-8')
+            entry = (Path(task['workspace'])/'bundle/skills/oh-my-patent/SKILL.md').read_text(encoding='utf-8')
             self.assertEqual(entry.split('## 必走链路', 1)[1], source.split('## 必走链路', 1)[1])
             if task['mode'] == 'generic':
                 self.assertNotIn('先读 [领域目录]', entry)
@@ -319,7 +320,7 @@ class LabTests(unittest.TestCase):
         folder = out/suite['tasks'][0]['id']
         grade = json.loads((folder/'grade.json').read_text(encoding='utf-8'))
         grade['reviewer'] = 'reviewer'
-        grade['criteria'][0].update(status='pass', reason='独立复核命令记录', evidence=[{'file': 'trace.jsonl', 'quote': 'bundle/domains/patent-mechanical/SKILL.md'}])
+        grade['criteria'][0].update(status='pass', reason='独立复核命令记录', evidence=[{'file': 'trace.jsonl', 'quote': 'bundle/skills/oh-my-patent/domains/patent-mechanical/SKILL.md'}])
         write_json(folder/'grade.json', grade)
         report = summarize(out)
         self.assertEqual(report['modes']['domain']['pass'], 1)

@@ -43,7 +43,7 @@ CNIPA 的公布公告站可以按分类号/申请人做结构化检索，比通�
 
 **如果你的场景确实需要 CNIPA 直查**（例如要按 IPC 分类号做穷尽检索），
 告诉用户这是可以补的能力，并建议移植上游那份 MIT 许可的实现
-（参考 `handsomestWei/patent-disclosure-skill` 的公开工作流）。
+（`handsomestWei/patent-disclosure-skill`，见 `docs/upstream-sync-c4ae70a.md`）。
 **不要自己临时写一个一次性爬虫**——那既脆弱又没人维护。
 
 ---
