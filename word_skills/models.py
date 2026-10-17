@@ -135,6 +135,9 @@ def validate_draft_v1(value: Any) -> dict:
     draft = _versioned(value, "draft")
     _string(draft.get("mode"), "draft.mode")
     _string(draft.get("title"), "draft.title")
+    for key in ("case_id", "document_id"):
+        if key in draft and (not isinstance(draft[key], str) or not draft[key].strip()):
+            raise ValueError(f"draft.{key} must be a nonempty string when supplied")
     for i, section in enumerate(_array(draft.get("sections"), "draft.sections")):
         location = f"draft.sections[{i}]"
         section = _object(section, location)
@@ -149,6 +152,9 @@ def validate_draft_v1(value: Any) -> dict:
                     _string(block[key], f"{block_location}.{key}")
             for k, claim_id in enumerate(_array(block.get("claim_ids", []), f"{block_location}.claim_ids")):
                 _string(claim_id, f"{block_location}.claim_ids[{k}]")
+            if block.get("type") == "image":
+                for key in ("path", "sha256"):
+                    _string(block.get(key), f"{block_location}.{key}")
             if block.get("type") == "table":
                 for k, heading in enumerate(_array(block.get("headers", []), f"{block_location}.headers")):
                     _string(heading, f"{block_location}.headers[{k}]")

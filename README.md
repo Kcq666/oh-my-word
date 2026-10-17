@@ -5,7 +5,7 @@
 当前实现包括：
 
 - `word-skills`：总入口、技能注册表和确定性路由；
-- `oh-my-technology`：技术报告、设计说明、需求规格、接口说明、测试报告、用户手册和运维手册七种 JSON 中间稿模式；
+- `oh-my-technology`：以技术报告、设计说明为重点的技术文档 Skill，并保留需求规格、接口说明、测试报告、用户手册和运维手册五种有契约约束的扩展模式；
 - `word-document`：基本单节样式与受限 `docxtpl` 插槽模板；
 - `oh-my-patent`：原有发明、实用新型、外观设计 CLI、六个领域模块和 final/handoff 门禁；
 - `oh-my-proposal`：版本化指南、要求/章节/附件映射、人员材料和预算一致性检查；
@@ -33,7 +33,7 @@ python -m word_skills route "只调整 Word 页眉和页码" --json
 python -m word_skills route "请准备项目申报书" --json
 ```
 
-路由结果只声明登记状态；路由器不会自动写正文，也不保证用户材料已经齐备。
+路由结果只声明登记状态和模式范围；`focused` 表示当前重点能力，`baseline` 表示已有结构化契约但仍需项目级验证。路由器不会自动写正文，也不保证用户材料已经齐备。
 
 ## 技术文档与 Word 交付
 
@@ -52,6 +52,19 @@ python -m word_skills finalize delivery
 `reviewed` 只表示已记录的内容和版面复核，不表示事实真实性、正式提交、受理或授权。模板支持范围、证据契约和交付状态见 `skills/word-document/references/`。
 
 ## 项目申报与软著准备
+
+软著直接复用 Fokkyp 2.6 的分析、业务理解、源码候选、申请字段与手册流程，继续使用共享 Word 后端；手册保留章节、表格、命令和真实图片：
+
+```powershell
+python -m word_skills copyright prepare SOURCE_ROOT --out CASE --name NAME --version VERSION
+# Agent填写上游业务模型和workflow/草稿/代码文件选择.json，形成manual.md及申请字段。
+python -m word_skills copyright select CASE/copyright.json --workflow-selection CASE/workflow/草稿/代码文件选择.json --reviewed-by REVIEWER
+python -m word_skills copyright package CASE/copyright.json --out DELIVERY --draft --soffice SOFFICE_EXE --pdftoppm PDFTOPPM_EXE
+```
+
+`--draft` 明确允许权属/完成日期等字段待确认，两个子文档保持 draft，不能定稿。字段齐备后去掉该开关，重新构建正式准备包；分别对 `DELIVERY/source` 和 `DELIVERY/manual` 执行共享 `review-init`、实际复核与 `finalize`，再运行 `copyright package-finalize DELIVERY`。
+
+包内有独立源码/手册 DOCX 和 PDF、申请信息辅助 TXT、实际页数、待核对事项和审计。TXT 不是官方申请表；页数不证明完整程序范围、每页行数或登记资格。Fokkyp 的具体复用取舍见 [吸收记录](docs/05-fokkyp-reuse.md)，现行 v1 与业务状态见 [契约说明](docs/06-contracts-and-states.md)。
 
 ```powershell
 python -m word_skills proposal template --profile nsfc-2026-general --out proposal.json

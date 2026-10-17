@@ -8,11 +8,12 @@ from zipfile import ZipFile
 
 from docx import Document
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+from docx.enum.text import WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Mm, Pt, RGBColor
 
-from .common import check_docx, sha256
+from .common import check_docx, inside, sha256
 
 STYLE_NAMES = ["Normal", "Title", "Heading 1", "Heading 2", "Heading 3"]
 SECTION_ATTRS = ["page_width", "page_height", "top_margin", "bottom_margin", "left_margin", "right_margin", "header_distance", "footer_distance"]
@@ -100,7 +101,23 @@ def clear_body(doc):
             doc.element.body.remove(item)
 
 
-def append_content(doc, draft, title=True):
+def append_content(doc, draft, title=True, asset_root=None):
+    if draft.get("mode") in {"copyright-source", "copyright-manual"} and draft.get("software_name"):
+        for s in doc.sections:
+            header = s.header.paragraphs[0]
+            header.clear()
+            header.style = doc.styles["Normal"]
+            header.paragraph_format.tab_stops.clear_all()
+            header.paragraph_format.tab_stops.add_tab_stop(
+                s.page_width - s.left_margin - s.right_margin, WD_TAB_ALIGNMENT.RIGHT)
+            run = header.add_run(f"{draft['software_name']} {draft['software_version']}\t第 ")
+            run.font.size = Pt(9)
+            field = OxmlElement("w:fldSimple")
+            field.set(qn("w:instr"), "PAGE")
+            header._p.append(field)
+            header.add_run(" 页").font.size = Pt(9)
+            for footer in s.footer.paragraphs:
+                footer.clear()
     if title:
         doc.add_paragraph(draft["title"], "Title")
     width = doc.sections[0].page_width - doc.sections[0].left_margin - doc.sections[0].right_margin
@@ -120,8 +137,25 @@ def append_content(doc, draft, title=True):
                     run.font.name = "Consolas"
                     run.font.size = Pt(8)
             elif block["type"] == "paragraph":
-                p = doc.add_paragraph(block["text"])
+                level = block.get("heading_level")
+                p = doc.add_paragraph(block["text"], f"Heading {level}" if level in (1, 2, 3) else None)
                 p.paragraph_format.widow_control = True
+                if block.get("monospace"):
+                    p.paragraph_format.line_spacing = 1
+                    for run in p.runs:
+                        run.font.name, run.font.size = "Consolas", Pt(8)
+            elif block["type"] == "image":
+                image = inside(asset_root, block["path"])
+                if sha256(image) != block["sha256"]:
+                    raise ValueError("Image differs from the audited source")
+                from docx.image.image import Image
+                info = Image.from_file(str(image))
+                available_height = doc.sections[0].page_height - doc.sections[0].top_margin - doc.sections[0].bottom_margin - Mm(20)
+                picture_width = min(width, int(available_height * info.px_width / info.px_height))
+                p = doc.add_paragraph()
+                p.paragraph_format.keep_with_next = True
+                p.add_run().add_picture(str(image), width=picture_width)
+                doc.add_paragraph(block["text"])
             else:
                 headers = block["headers"]
                 table = doc.add_table(rows=1, cols=len(headers))
@@ -173,7 +207,7 @@ def append_content(doc, draft, title=True):
                 doc.add_paragraph().paragraph_format.space_after = Pt(2)
 
 
-def render(draft, output, template=None, template_mode="style"):
+def render(draft, output, template=None, template_mode="style", *, asset_root=None):
     profile = None
     if template:
         profile = fingerprint(template)
@@ -197,14 +231,14 @@ def render(draft, output, template=None, template_mode="style"):
         body = tpl.new_subdoc()
         for a in SECTION_ATTRS:
             setattr(body.sections[0], a, getattr(template_doc.sections[0], a))
-        append_content(body, draft, title=False)
+        append_content(body, draft, title=False, asset_root=asset_root)
         tpl.render({"title": draft["title"], "body": body}, jinja_env=SandboxedEnvironment(undefined=StrictUndefined), autoescape=True)
         tpl.save(output)
     else:
         doc = Document(template) if template else default_document()
         if template:
             clear_body(doc)  # Explicit --template-mode style: reference body is not an editable input document.
-        append_content(doc, draft)
+        append_content(doc, draft, asset_root=asset_root)
         doc.core_properties.title = draft["title"]
         doc.core_properties.author = ""
         doc.save(output)

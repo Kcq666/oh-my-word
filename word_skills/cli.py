@@ -72,6 +72,27 @@ def main(argv=None):
     p.add_argument("--no-preview", action="store_true")
     p = commands.add_parser("copyright", help="软著源码清单、材料草稿与机械校验")
     copyright_commands = p.add_subparsers(dest="copyright_action", required=True)
+    p = copyright_commands.add_parser("workflow", help="直接运行固定 Fokkyp 业务阶段；后续参数原样传递")
+    p.add_argument("stage", choices=["analyze", "business", "candidates", "manual", "fields", "confirm", "screenshots"])
+    p.add_argument("stage_arguments", nargs=argparse.REMAINDER)
+    p = copyright_commands.add_parser("prepare", help="建立源码候选、业务理解与申请材料草稿")
+    p.add_argument("source_root")
+    p.add_argument("--out", required=True)
+    p.add_argument("--name", default="")
+    p.add_argument("--version", default="")
+    p = copyright_commands.add_parser("select", help="应用已审阅的 selection.json，不确认权属")
+    p.add_argument("draft")
+    p.add_argument("--workflow-selection", help="复用上游代码文件选择.json，投影成原件哈希/完整行段")
+    p.add_argument("--reviewed-by", default="", help="实际源码审阅人或Agent；不代表用户权属确认")
+    p = copyright_commands.add_parser("package", help="共享链路生成源码、操作说明与申请信息辅助稿")
+    p.add_argument("draft")
+    p.add_argument("--out", required=True)
+    p.add_argument("--draft", action="store_true", dest="preparation_only", help="允许权属等字段待确认；只能生成不可定稿的草稿")
+    p.add_argument("--soffice")
+    p.add_argument("--pdftoppm")
+    p.add_argument("--no-preview", action="store_true")
+    p = copyright_commands.add_parser("package-finalize")
+    p.add_argument("output")
     p = copyright_commands.add_parser("scan")
     p.add_argument("source_root")
     p.add_argument("--out")
@@ -100,7 +121,13 @@ def main(argv=None):
             else:
                 for row in result["skills"]:
                     path = row["path"] or "(planned; no implementation path)"
-                    print(f"{row['name']:<18} {row['status']:<11} {path}")
+                    scope = row.get("mode_scope") or {}
+                    focused = ", ".join(mode for mode, value in scope.items() if value == "focused")
+                    extended = ", ".join(mode for mode, value in scope.items() if value == "baseline")
+                    suffix = f" | focused: {focused}" if focused else ""
+                    if extended:
+                        suffix += f" | baseline: {extended}"
+                    print(f"{row['name']:<18} {row['status']:<11} {path}{suffix}")
             return 0
         if args.command == "route":
             result = route(args.request)
@@ -111,7 +138,8 @@ def main(argv=None):
                 print(f"status: {'clarification-needed' if result['needs_clarification'] else 'ready'}")
                 print(result["reason"])
                 for match in result["matches"]:
-                    print(f"- {match['skill']} ({match['status']}): {', '.join(match['matched_terms'])}")
+                    scope = f", {match['mode_scope']} scope" if match["mode_scope"] else ""
+                    print(f"- {match['skill']} ({match['status']}{scope}): {', '.join(match['matched_terms'])}")
             return 0
         if args.command == "proposal":
             if args.proposal_action == "template":
@@ -122,7 +150,22 @@ def main(argv=None):
             else:
                 result = proposal.lint(args.draft, allow_expired=args.allow_expired, case=args.case)
         elif args.command == "copyright":
-            if args.copyright_action == "scan":
+            if args.copyright_action == "workflow":
+                from .copyright_workflow import run_stage
+                return run_stage(args.stage, args.stage_arguments)
+            elif args.copyright_action in {"prepare", "select", "package", "package-finalize"}:
+                from . import copyright_package
+                if args.copyright_action == "prepare":
+                    result = copyright_package.prepare(args.source_root, args.out, name=args.name, version=args.version)
+                elif args.copyright_action == "select":
+                    result = copyright_package.apply_selection(args.draft,
+                        workflow_selection=args.workflow_selection, reviewed_by=args.reviewed_by)
+                elif args.copyright_action == "package-finalize":
+                    result = copyright_package.finalize_package(args.output)
+                else:
+                    result = copyright_package.package(args.draft, args.out, draft=args.preparation_only,
+                        soffice=args.soffice, pdftoppm=args.pdftoppm, no_preview=args.no_preview)
+            elif args.copyright_action == "scan":
                 result = copyright.scan(args.source_root, args.out)
             elif args.copyright_action == "template":
                 result = copyright.write_template(args.out)

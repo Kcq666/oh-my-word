@@ -36,7 +36,7 @@ def inspect_docx(path, draft):
         for block in section["blocks"]:
             if block["type"] == "code":
                 required = block["text"].splitlines()
-            elif block["type"] == "paragraph":
+            elif block["type"] in {"paragraph", "image"}:
                 required = [block["text"]]
             else:
                 required = [str(c) for row in [block["headers"]] + block["rows"] for c in row]

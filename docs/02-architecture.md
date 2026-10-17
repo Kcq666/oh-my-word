@@ -4,29 +4,31 @@
 
 ## 0. 当前落地状态（2026-10-15）
 
-本仓库已由原 `oh-my-patent` 工作树整合成 `oh-my-word` / `word-skills` monorepo。根目录结构与六主技能目标一致；没有把项目申报、软著或尚未验证的技术文档模式标成已实现。
+本仓库已由原 `oh-my-patent` 工作树整合成 `oh-my-word` / `word-skills` monorepo。根目录结构与六主技能目标一致；实现状态与模式成熟度分开记录，不能把“有入口和契约”理解为“所有模式同等成熟”。
 
 | 目标 | 当前实现 | 证据与边界 |
 |---|---|---|
 | `word-skills` 路由入口 | 注册表驱动的 `skills/word-skills/SKILL.md`、`registry/skills.yaml` 与确定性 CLI 路由 | `tests/test_word_skills.py`；路由匹配不代替 Agent 的语义判断 |
-| `oh-my-technology` | 七种 JSON v1 模式及来源、内容、Word/PDF 交付流程；五种新增模式有独立记录检查 | `tests/test_pipeline.py`、`tests/test_technology_modes.py`；真实客户模板与跨环境版式仍需试运行 |
+| `oh-my-technology` | 七种 JSON v1 模式及来源、内容、Word/PDF 交付流程；技术报告和设计说明为重点模式，另外五种为 baseline 扩展模式 | `tests/test_pipeline.py`、`tests/test_technology_modes.py`、`registry/skills.yaml`；扩展模式的真实客户模板与跨环境版式仍需试运行 |
 | `word-document` | 单节基本样式、有限模板插槽、预览与逐页审阅记录 | `skills/word-document/`；不代表任意企业模板或所有 Office/WPS 版本已验证 |
 | `oh-my-patent` | 原 Python 包、旧 CLI、主 Skill、六领域 Skill、领域注册表和 final/handoff 门禁保留 | `tests/test_final_gate.py`、`tests/test_skill_bundle.py`；六领域保持 `experimental` |
 | `oh-my-proposal` | 指南 Profile、要求/章节/附件/人员/预算校验和共享 build 适配 | `word_skills/proposal.py`、`tests/test_proposal.py`；随附 NSFC 2026 Profile 是过期历史结构 |
 | `oh-my-copyright` | 源码扫描、敏感信息排除、哈希/行段校验、手册/字段一致性、摘录与共享 build 适配 | `word_skills/copyright.py`、`tests/test_copyright.py`；页数、权属和当期登记规则仍需人工核对 |
 
-主注册表共六项，均有实现路径；专利领域另有六项实验性 Skill。`tools/check_word_skills.py` 与 `tools/check_skills.py` 验证路径、frontmatter、注册表和引用；自动化测试验证代码行为，不是写作质量、法律权属或受理结论。
+主注册表共六项，均有实现路径；技术模式的 `mode_scope` 进一步区分重点与 baseline 扩展，专利领域另有六项实验性 Skill。`tools/check_word_skills.py` 与 `tools/check_skills.py` 验证路径、frontmatter、注册表和引用；自动化测试验证代码行为，不是写作质量、法律权属或受理结论。
 
 整合决策与兼容边界：
 
 - 专利代码及 `tools/patent.py` 入口保留；`python -m word_skills patent ...` 与 `oh-my-patent` console script 转发给旧 CLI，不把专利模型放进公共文档渲染层。
 - 专利 Skill 资源移到 `skills/oh-my-patent/`，域注册表、prompt、参考和评测使用新路径。六领域仍是实验状态，未因迁移升级。
 - 技术文档的 `draft.json`、`source-index.json`、`evidence.json` 继续以 `schema_version=1` 为现行数据契约。`validate_*_v1` 负责结构边界；新增字段或版本迁移须显式兼容，不批量重写既有审阅材料。
-- `models.py` 中 `CaseManifest`、`Requirement` 等 dataclass 是扩展 DTO，并非现有 JSON v1 的替代序列化格式。当前管线仍以原 v1 字段和校验为准；需求到章节/附件映射、多文档 Case 身份和单位/状态约束仍待后续阶段实现。
+- `models.py` 中 `CaseManifest`、`Requirement` 等 dataclass 是扩展 DTO，并非现有 JSON v1 的替代序列化格式。当前管线仍以原 v1 字段和校验为准；需求到章节/附件映射及跨业务单位约束不能视为统一模型已落地。0.3.0 的可选 case_id/document_id 已绑定到稿件与交付 manifest；这只是可兼容的身份增量，不是全部扩展对象迁移。
 - 两种材料摄入路径保持独立：专利旧流程沿用原转换与专利证据格式；技术文档流程使用 MarkItDown 与独立来源定位/损失提示。它们不共享未经验证的定位或审阅状态。
 - 技术文档交付状态是 `blocked`、`failed`、`draft`、`awaiting-review`、`reviewed`。这里的 `reviewed` 只表示完整性门禁通过且已记录内容/页面审阅，不证明事实真实性或正式提交。
 - `docs/upstream-sources.json` 是候选研究记录；`upstream.lock.json` 列出实际改编的文字规则和本轮已测直接运行依赖。候选没有自动变成依赖，许可证副本与改编说明见 `THIRD_PARTY.md`。
 - wheel 包含 Python 包、章节 schema 和路由元数据快照；完整 Skill 文案与相对资源的受支持读取方式仍是仓库 monorepo。复制单个 Skill 文件不构成完整安装。
+
+2026-10-16 增量：软著增加 prepare/select/package/package-finalize，共享制作层分别生成源码与手册，根包绑定申请辅助 TXT、实际页数与子交付。可选 case_id/document_id 进入现行 v1 稿件和 manifest，旧稿兼容；业务待绑定状态与不可定稿 preview 草稿见 [契约与状态](06-contracts-and-states.md)。这不代表全部扩展 DTO 已成为统一存储格式。
 
 ## 1. 六个主技能
 
@@ -58,6 +60,8 @@
 技术报告应覆盖软件、硬件、制造工艺等技术领域，不限于软件 README；第一阶段选软件项目样本验证工具链。后续领域参考按真实需求增加，不预先复制专利六领域为另一套六技能。
 
 新建完整稿的共用流程：明确受众/目的/模板 → 原件与材料登记 → 事实、需求及缺口梳理 → 选择模式和章节 → 起草并绑定证据 → 内容复核 → DOCX 生成 → 实际渲染检查 → 交付及变更记录。局部修改仅执行相关步骤。
+
+2026-10-17 软著流程更新：直接纳入Fokkyp 2.6的业务阶段脚本，保留统一制作架构。调用链为 `copyright prepare → 上游analyze/business/candidates → Agent业务模型与同一份选材 → workflow manual/fields → copyright build/package → 共享Word制作与审阅`。`copyright_workflow.py`只适配CLI、已有授权、事实及路径边界；`copyright_manual.py`复用markdown-it-py将章节、表格、命令和本地图片投影到现行v1稿件；`_vendor/fokkyp/`保存原件和MIT。原有专利后端、技术文档模式和Word后端不分叉。图片进入同一审计快照，兼容旧无图片稿件。详细复用范围见[吸收记录](05-fokkyp-reuse.md)。
 
 ## 3. 目标仓库目录
 
@@ -94,6 +98,7 @@ oh-my-word/                        # 当前 GitHub 仓库
 │  ├─ technology.py                # 新技术模式的独立记录检查
 │  ├─ proposal.py                  # 指南/预算业务层
 │  ├─ copyright.py                 # 源码/权属声明业务层
+│  ├─ copyright_package.py         # 准备/选择/源码+手册整套交付
 │  ├─ business.py                  # 业务结果绑定到共用审阅 manifest
 │  ├─ render.py, inspect.py        # Word 制作与 PDF/页图检查
 │  ├─ delivery.py                  # build/review/finalize

@@ -1,0 +1,25 @@
+{
+  "repository": "https://github.com/Fokkyp/SoftwareCopyright-Skill",
+  "commit": "e78f746e0254ed4be7e9a561ce0acc7180d5370a",
+  "version": "2.6",
+  "license": "MIT",
+  "files": {
+    "SKILL.md": "df1616ee219ba20cc345564dd4423e34c03349f6d9945afdbdeafb06caf69351",
+    "scripts/common.py": "879e3e829d347d55f9706b70d8defecabcbab84132b280d1f5eebacc290c3580",
+    "scripts/analyze_project.py": "4579a859b9b09c9f489aee192639d985e62bdf090b6cfd2fab20b6255996aa4b",
+    "scripts/generate_business_context.py": "b6456da96c4ed822ecf0df2f8008d337acaf6f549bd3cff02b094fbed18d6803",
+    "scripts/propose_code_selection.py": "b3fc605ba15c54f359be0fb98c14f1fe6b8001d863767e31a563c21f7c4074c7",
+    "scripts/extract_code_material.py": "0afeded373dbe93d6f359d529ef1b065eccb25f27bab4e54e68781f2037bb61a",
+    "scripts/generate_manual_draft.py": "243aaeb9c914f9a5f2a0cd26ecd878ffdbf522ed8f6d434583f919ceed9fb91f",
+    "scripts/generate_application_info.py": "18f8689109984d1178bb6cee56e33e5579f5925e0f9daeb744e5c3e40f88d3da",
+    "scripts/confirm_stage.py": "987eee99e81203cf950d5925a0e7feebc22ae9fe4ed3e67c523e2f2648021a64",
+    "scripts/capture_screenshots.py": "cf16827703404628ade8340b38ef2cc0277cf3a07f91d1984e7b3b4010b0ad7c",
+    "references/business_understanding_rules.md": "4c110fc91bd434ea900a6fb73af4527198b2fe5c1f5b70d576c78235b1af0815",
+    "references/code_selection_rules.md": "31541d6832a9afeacfcb153ef6ada663bc08b1ceb9fa00cbfa9a03be2c141ee0",
+    "references/copyright_material_rules.md": "8df85a301c5d86660b8622d7fe3c43fb15e055bba19d57b238bdca353e9b6e7f",
+    "references/manual_structure.md": "5941d60caeca1604527595c11088301122950daf782a0d995dcaabc2650e2704",
+    "references/application_fields.md": "dcd15ce80c06e448d18732c10ec38d7a9cc707ede859dd6be7de244428b4e64d",
+    "LICENSE": "e949ee7230994b92931cc265399d963ed5498e0a446f3e0cd4eb6952f900f6da"
+  },
+  "modifications": []
+}

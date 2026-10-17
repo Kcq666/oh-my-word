@@ -12,10 +12,10 @@ TEXT_EXTENSIONS = {".md", ".txt", ".py", ".pyw", ".java", ".xml", ".json", ".yam
 SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "target", "__pycache__", ".tools", "outputs", ".agent"}
 
 
-def extract(path):
+def extract(path, *, force_text=False):
     path = Path(path)
     notices = []
-    if path.suffix.lower() in TEXT_EXTENSIONS:
+    if force_text or path.suffix.lower() in TEXT_EXTENSIONS:
         try:
             text = path.read_text(encoding="utf-8-sig")
         except UnicodeDecodeError:
@@ -63,8 +63,9 @@ def extract(path):
     return text, segments, notices
 
 
-def ingest(inputs, case):
+def ingest(inputs, case, *, text_inputs=()):
     case = Path(case).resolve()
+    text_inputs = {Path(p).resolve() for p in text_inputs}
     if (case / "source-index.json").exists():
         raise ValueError("Case already indexed; use a new case directory to preserve evidence")
     files, skipped = [], []
@@ -85,7 +86,7 @@ def ingest(inputs, case):
                 skipped.append({"path": str(candidate), "reason": "Symlink/outside input root"})
             elif candidate.name.startswith(".env") or candidate.suffix.lower() in {".pem", ".key", ".pfx"}:
                 skipped.append({"path": str(candidate), "reason": "Potential credential file"})
-            elif candidate.suffix.lower() not in TEXT_EXTENSIONS | {".docx", ".pdf"}:
+            elif candidate.suffix.lower() not in TEXT_EXTENSIONS | {".docx", ".pdf"} and candidate.resolve() not in text_inputs:
                 skipped.append({"path": str(candidate), "reason": "Unsupported format; not silently consumed"})
             elif candidate.stat().st_size > 20_000_000:
                 skipped.append({"path": str(candidate), "reason": "File larger than 20 MB"})
@@ -99,7 +100,8 @@ def ingest(inputs, case):
         snapshot = folder / ("original" + path.suffix)
         shutil.copyfile(path, snapshot)
         try:
-            text, segments, notices = extract(snapshot)
+            text, segments, notices = (extract(snapshot, force_text=True)
+                                       if path.resolve() in text_inputs else extract(snapshot))
         except Exception as exc:
             skipped.append({"path": str(path), "reason": f"Extraction failed: {type(exc).__name__}: {exc}"})
             continue

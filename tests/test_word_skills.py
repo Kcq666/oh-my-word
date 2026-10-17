@@ -27,6 +27,19 @@ def test_registry_has_six_implemented_skills():
     assert all(row["path"] for row in rows)
 
 
+def test_technology_modes_have_explicit_focus_scope():
+    technology = next(row for row in load_registry(ROOT) if row["name"] == "oh-my-technology")
+    assert technology["mode_scope"] == {
+        "technical-report": "focused",
+        "design-spec": "focused",
+        "requirements-spec": "baseline",
+        "interface-spec": "baseline",
+        "test-report": "baseline",
+        "user-manual": "baseline",
+        "operations-manual": "baseline",
+    }
+
+
 @pytest.mark.parametrize(
     ("user_request", "skill", "mode"),
     [
@@ -62,6 +75,7 @@ def test_route_selects_interface_mode():
     result = route("请写一份接口说明", ROOT)
     assert result["selected"] == "oh-my-technology"
     assert result["matches"][0]["mode"] == "interface-spec"
+    assert result["matches"][0]["mode_scope"] == "baseline"
     assert result["matches"][0]["status"] == "implemented"
     assert not result["needs_clarification"]
 
@@ -94,3 +108,5 @@ def test_list_skills_is_registry_backed():
     names = {row["name"] for row in list_skills(ROOT)}
     assert "word-skills" in names
     assert "oh-my-proposal" in names
+    technology = next(row for row in list_skills(ROOT) if row["name"] == "oh-my-technology")
+    assert technology["mode_scope"]["technical-report"] == "focused"

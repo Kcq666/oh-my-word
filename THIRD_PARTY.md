@@ -24,6 +24,7 @@
 | docxcompose | 1.4.1 | docxtpl 子文档辅助，MIT |
 | MarkItDown | 0.1.8 | 可选依赖，MIT；本地 DOCX/PDF 摄入 |
 | PyYAML | 6.0.3 | 直接依赖，MIT；章节契约 |
+| markdown-it-py | 运行时版本记入测试环境 | 直接依赖，MIT；复用Markdown解析而不自写语法处理器 |
 | pdfplumber | 0.11.9 | 直接依赖，MIT；PDF 文本位置与版面启发式检查 |
 | pypdf | 6.10.0 | 直接依赖，BSD-3-Clause；页数及按页文本 |
 | LibreOffice | 具体运行版本记入 manifest | 外部程序，不随代码发行；遵循其原有许可 |
@@ -33,15 +34,17 @@
 
 ## 业务技能复用核查
 
-以下固定提交实际用于申报/软著技能的设计取舍；均为 MIT。复用的是可核验的流程边界和材料字段，未复制其执行器或整套 Agent 编排。
+以下固定提交用于申报/软著技能，均为 MIT。Fokkyp 当前直接复用阶段脚本，其余按表中范围使用。
 
 | 来源与固定提交 | 核查文件 | 本地落点 | 复用决策 |
 |---|---|---|---|
-| [Fokkyp/SoftwareCopyright-Skill](https://github.com/Fokkyp/SoftwareCopyright-Skill/tree/947d5963194bfda8ce57b8b454b486f13359dee4) | `software-copyright-materials/SKILL.md`; `scripts/extract_code_material.py`; `LICENSE` | `word_skills/copyright.py`; `skills/oh-my-copyright/` | 采用真实源码选择、文件/行段追溯和手册证据边界；不采用 OfficeCLI 执行器 |
+| [Fokkyp/SoftwareCopyright-Skill](https://github.com/Fokkyp/SoftwareCopyright-Skill/tree/e78f746e0254ed4be7e9a561ce0acc7180d5370a) | `software-copyright-materials/SKILL.md`; `scripts/extract_code_material.py`; `LICENSE` | `word_skills/copyright.py`; `skills/oh-my-copyright/` | 直接复用2.6分析、业务理解、候选、字段、手册、确认和截图清单脚本；原件及哈希在 word_skills/_vendor/fokkyp；不采用 OfficeCLI 执行器 |
 | [suling-fun/software-copyright-materials-skill](https://github.com/suling-fun/software-copyright-materials-skill/tree/d7b49eea8f6e455ef3547c0d16d1945e204bc8a7) | `SKILL.md`; `verify_materials.py`; `LICENSE` | `word_skills/copyright.py`; `skills/oh-my-copyright/` | 采用机械校验与人工语义复核的边界；不复制黑名单或登记器 |
 | [caolonghao/nsfc-grant-assistant-skill](https://github.com/caolonghao/nsfc-grant-assistant-skill/tree/a694ab4cfbf8bad64357c6803e5f39c4b0eda47a) | `ndrc-bid-assistant/`; `LICENSE` | `word_skills/proposal.py`; `skills/oh-my-proposal/` | 采用渠道/指南/条件证据先行；不复制评审模型或 Agent 编排 |
 
 每项的固定提交、许可证文本和核查结果也记录在 [upstream.lock.json](upstream.lock.json)。候选调查仍在 [docs/upstream-sources.json](docs/upstream-sources.json)，不能把候选列表当作已集成依赖。
+
+2026-10-17 从2.5流程改编升级到2.6原脚本复用。原件、许可证和固定哈希保留；适配代码位于copyright_workflow.py，不修改上游文件；仍保留源码原文、共享Word后端和实际分页检查。逐项对照见 [docs/05-fokkyp-reuse.md](docs/05-fokkyp-reuse.md)。
 
 ## 本轮新增候选但未集成
 

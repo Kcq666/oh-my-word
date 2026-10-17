@@ -30,9 +30,9 @@ _LANGUAGES = {
 }
 _SKIP_DIRS = {
     ".git", ".hg", ".svn", ".venv", "venv", "env", "node_modules", "vendor",
-    "dist", "build", "out", "target", "coverage", ".pytest_cache", "__pycache__",
+    "dist", "build", "out", "target", "coverage", ".pytest_cache", "__pycache__", "_vendor",
     ".mypy_cache", ".ruff_cache", ".tox", ".agent", ".idea", ".vscode",
-    "secrets", "private", "third_party", "site-packages", ".next", ".nuxt",
+    "secrets", "private", "third_party", "site-packages", ".next", ".nuxt", "outputs", ".tools", ".codex",
 }
 _SECRET_NAMES = {
     ".env", ".env.local", ".env.production", ".npmrc", ".pypirc", "credentials",
@@ -70,7 +70,9 @@ def _skip_reason(path: Path, root: Path) -> str | None:
     if path.stat().st_size > _MAX_FILE_BYTES:
         return "file-too-large"
     if path.suffix.lower() not in _LANGUAGES:
-        return "unsupported-source-extension"
+        from ._vendor.fokkyp.scripts.common import is_source_candidate
+        if not is_source_candidate(path):
+            return "unsupported-source-extension"
     return None
 
 
@@ -121,7 +123,7 @@ def scan_sources(source_root: str | Path) -> dict[str, Any]:
                 continue
             files.append({
                 "path": rel,
-                "language": _LANGUAGES[path.suffix.lower()],
+                "language": _LANGUAGES.get(path.suffix.lower(), "待核对"),
                 "encoding": encoding,
                 "bytes": path.stat().st_size,
                 "line_count": len(text.splitlines()),
@@ -135,6 +137,7 @@ def scan_sources(source_root: str | Path) -> dict[str, Any]:
         "excluded": excluded,
         "selection_policy": {
             "include_extensions": sorted(_LANGUAGES),
+            "unknown_extensions": "Fokkyp 2.6 content-based candidates; language and program scope require review",
             "excluded_directories": sorted(_SKIP_DIRS),
             "max_file_bytes": _MAX_FILE_BYTES,
             "note": "Inventory metadata only; source content remains at source_root.",
@@ -186,9 +189,27 @@ def _strings_equal(value: Any, expected: str) -> bool:
     return isinstance(value, str) and value.strip() == expected.strip()
 
 
+def _material_hashes(value, base_dir):
+    """Capture files before validation, not after a successful check."""
+    paths = [value.get("manual", {}).get("path")] if isinstance(value.get("manual"), dict) else []
+    paths += [s.get("path") for s in value.get("screenshots", []) if isinstance(s, dict)] if isinstance(value.get("screenshots"), list) else []
+    result = {}
+    for rel in paths:
+        try:
+            if isinstance(rel, str) and rel and not Path(rel).is_absolute():
+                file = inside(base_dir, rel)
+                if file.is_file():
+                    result[str(file)] = sha256(file)
+        except (ValueError, OSError):
+            pass  # The normal validator reports malformed or missing files.
+    return result
+
+
 def validate_copyright(value: Any, *, source_root: str | Path | None = None,
-                       base_dir: str | Path | None = None) -> dict[str, Any]:
+                       base_dir: str | Path | None = None, purpose="registration") -> dict[str, Any]:
     """Validate a copyright material draft against its original source inventory."""
+    if purpose not in {"registration", "preview"}:
+        raise ValueError("purpose must be registration or preview")
     issues: list[dict[str, Any]] = []
     if not isinstance(value, dict) or value.get("schema_version") != SCHEMA_VERSION:
         return {"schema_version": SCHEMA_VERSION, "passed": False, "issues": [_issue("SCHEMA", "copyright draft requires schema_version=1")]}
@@ -358,8 +379,19 @@ def validate_copyright(value: Any, *, source_root: str | Path | None = None,
         ai_use = {}
     if ai_use.get("used") and not ai_use.get("human_verified"):
         issues.append(_issue("AI_DISCLOSURE", "AI-assisted material needs human verification before handoff"))
+    deferred = []
+    if purpose == "preview":
+        for issue in issues:
+            if (issue["code"] in {"RIGHTS_HOLDER", "RIGHTS_CONFIRMATION", "AI_DISCLOSURE"}
+                    or (issue["code"] == "SOFTWARE_FIELD" and issue["message"] == "software.completion_date is required")):
+                issue["severity"] = "warning"
+                issue["deferred"] = True
+                deferred.append(issue["code"])
     return {
         "schema_version": SCHEMA_VERSION,
+        "purpose": purpose,
+        "handoff_ready": purpose == "registration" and not any(item["severity"] == "error" for item in issues),
+        "deferred_fields": deferred,
         "passed": not any(item["severity"] == "error" for item in issues),
         "checks": "source inventory, file hashes, line ranges, source exclusions, identity consistency, ownership confirmation",
         "selected_line_count": selected_lines,
@@ -465,28 +497,40 @@ def extract_materials(path: str | Path, out: str | Path, *, source_root: str | P
             "state": "source-excerpts-not-paginated"}
 
 
-def build(path, out, *, source_root=None, soffice=None, pdftoppm=None, no_preview=False):
+def build(path, out, *, source_root=None, soffice=None, pdftoppm=None, no_preview=False,
+          purpose="registration", document="source"):
     """Produce auditable source Word/PDF through the shared renderer and review gate."""
     from tempfile import TemporaryDirectory
     from .ingest import ingest
     from .delivery import build as shared_build
     from .business import bind_business_audit
+    if document not in {"source", "manual"}:
+        raise ValueError("document must be source or manual")
     case_path = Path(path).resolve()
     source_bytes = case_path.read_bytes()
     value = json.loads(source_bytes.decode("utf-8-sig"))
     manifest_path = None
+    manifest_bytes = None
     if isinstance(value.get("source_manifest"), str) and value["source_manifest"]:
         manifest_path = Path(value["source_manifest"])
         if not manifest_path.is_absolute():
             manifest_path = (case_path.parent / manifest_path).resolve()
-        value["source_manifest"] = str(manifest_path)
+        manifest_bytes = manifest_path.read_bytes()
+        value["source_manifest"] = json.loads(manifest_bytes.decode("utf-8-sig"))
     manifest, root, manifest_issues = _manifest(value, Path(source_root).resolve() if source_root else None)
     if manifest is not None:
         value["source_manifest"] = manifest
-    result = validate_copyright(value, source_root=source_root, base_dir=case_path.parent)
+    material_hashes = _material_hashes(value, case_path.parent)
+    if manifest_path is not None:
+        material_hashes[str(manifest_path)] = hashlib.sha256(manifest_bytes).hexdigest()
+    result = validate_copyright(value, source_root=source_root, base_dir=case_path.parent, purpose=purpose)
     result["issues"].extend(manifest_issues)
     result["passed"] = not any(item["severity"] == "error" for item in result["issues"])
     if not result["passed"]:
+        return {"state": "blocked", "validation": result}
+    if any(not Path(p).is_file() or sha256(p) != h for p, h in material_hashes.items()):
+        result["passed"] = False
+        result["issues"].append(_issue("MATERIAL_CHANGED", "Manual, screenshot or source inventory changed during validation"))
         return {"state": "blocked", "validation": result}
     if root is None:
         return {"state": "blocked", "validation": result}
@@ -495,31 +539,34 @@ def build(path, out, *, source_root=None, soffice=None, pdftoppm=None, no_previe
         raise ValueError("material output must be outside the source tree")
     selected = value["code_material"]["files"]
     manual_path = inside(case_path.parent, value["manual"]["path"])
-    manual_hash = sha256(manual_path)
+    manual_hash = material_hashes[str(manual_path)]
     with TemporaryDirectory(prefix="word-copyright-") as directory:
         temporary = Path(directory)
         case = temporary / "case"
         input_snapshot = temporary / "business-input.json"
         input_snapshot.write_bytes(source_bytes)
         paths = [input_snapshot, manual_path] + [inside(root, item["path"]) for item in selected]
-        index = ingest(paths, case)
+        index = ingest(paths, case, text_inputs=[inside(root, item["path"]) for item in selected])
         if sha256(manual_path) != manual_hash:
             raise ValueError("manual changed during intake; revalidate")
         sources = {s["original_path"]: s for s in index["sources"]}
         identity = value["software"]
-        rights = value["rights_holder"]
-        declaration = (f"申请人声明的软件：{identity['name']}；版本：{identity['version']}；"
-                       f"完成日期：{identity['completion_date']}；权利人：{rights['name']}。"
-                       f"权属声明依据：{rights['confirmation_note']}")
+        rights = value.get("rights_holder") or {}
+        if purpose == "preview":
+            declaration = f"软件：{identity['name']}；版本：{identity['version']}。本件为材料草稿，完成日期、权属及正式申请字段尚待确认。"
+        else:
+            declaration = (f"申请人声明的软件：{identity['name']}；版本：{identity['version']}；"
+                           f"完成日期：{identity['completion_date']}；权利人：{rights['name']}。"
+                           f"权属声明依据：{rights['confirmation_note']}")
         captions = [f"文件：{item['path']}；原文件行段：{item['line_start']}—{item['line_end']}。" for item in selected]
         metadata = sources[str(input_snapshot)]
         segments = read_json(inside(case, metadata["segments"]))
         quote = "\n".join(segment["text"] for segment in segments)
-        write_json(case / "evidence.json", {"schema_version": 1, "claims": [{
+        claims = [{
             "id": "input-transcription", "statement": declaration + "\n" + "\n".join(captions),
             "source_id": metadata["id"], "quote": quote,
             "locators": [s["locator"] for s in segments],
-            "status": "verified", "verified_by": "literal input transcription; not ownership verification", "verified_at": _utc_now()}]})
+            "status": "verified", "verified_by": "literal input transcription; not ownership verification", "verified_at": _utc_now()}]
         code_blocks = []
         for number, item in enumerate(selected):
             source = sources.get(str(inside(root, item["path"])))
@@ -536,12 +583,38 @@ def build(path, out, *, source_root=None, soffice=None, pdftoppm=None, no_previe
                 {"id": "identity-body", "type": "paragraph", "intent": "fact", "text": declaration, "claim_ids": ["input-transcription"]},
                 {"id": "limit", "type": "paragraph", "intent": "analysis", "text": "本材料记录提供的声明与源码选段；程序未确认权属、完整登记材料资格或受理条件。", "claim_ids": []}]},
             {"id": "source", "title": "原文源码选段", "blocks": code_blocks}]}
+        if document == "manual":
+            source = sources[str(manual_path)]
+            manual_segments = read_json(inside(case, source["segments"]))
+            quote = "\n".join(s["text"] for s in manual_segments)
+            manual_text = inside(case, source["extracted"]).read_text(encoding="utf-8")
+            claims.append({"id": "manual-transcription", "statement": manual_text,
+                           "source_id": source["id"], "quote": quote,
+                           "locators": [s["locator"] for s in manual_segments], "status": "verified",
+                           "verified_by": "literal manual transcription; semantic review remains required", "verified_at": _utc_now()})
+            from .copyright_manual import markdown_blocks
+            blocks = markdown_blocks(manual_text, value["screenshots"], case_path.parent, case)
+            draft = {"schema_version": 1, "mode": "copyright-manual", "title": "软件操作说明书",
+                     "sections": [{"id": "identity", "title": "软件信息", "blocks": [
+                         {"id": "software-identity", "type": "paragraph", "intent": "fact",
+                          "text": f"{value['software']['name']} {value['software']['version']}",
+                          "claim_ids": ["input-transcription"]}]},
+                         {"id": "manual", "title": "功能与操作说明", "blocks": blocks}]}
+        draft.update(software_name=value["software"]["name"], software_version=value["software"]["version"])
+        write_json(case / "evidence.json", {"schema_version": 1, "claims": claims})
+        if value.get("case_id"):
+            draft.update(case_id=value["case_id"], document_id=f"copyright-{document}")
         draft_path = temporary / "draft.json"
         write_json(draft_path, draft)
         built = shared_build(draft_path, case, target, soffice=soffice, pdftoppm=pdftoppm, no_preview=no_preview, business_gate="copyright")
     if built["state"] in ("business-pending", "draft"):
         extras = [inside(case_path.parent, item["path"]) for item in value["screenshots"]]
-        if manifest_path is not None and manifest_path.is_file():
+        if manifest_path is not None:
             extras.append(manifest_path)
-        return bind_business_audit(target, "copyright", case_path, result, extras, source_bytes=source_bytes)
+        bound = bind_business_audit(target, "copyright", case_path, result, extras,
+                                    source_bytes=source_bytes, extra_hashes=material_hashes)
+        if purpose == "preview" and bound["state"] in {"awaiting-review", "draft"}:
+            bound.update(state="draft", preparation_only=True)
+            write_json(target / "manifest.json", bound)
+        return bound
     return built

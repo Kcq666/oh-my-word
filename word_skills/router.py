@@ -36,6 +36,7 @@ def route(request: str, root: str | Path | None = None) -> dict:
         if not hits:
             continue
         row = rows[name]
+        mode_scope = row.get("mode_scope") or {}
         mode = forced_mode
         if name == "oh-my-technology":
             mode = next((
@@ -48,6 +49,7 @@ def route(request: str, root: str | Path | None = None) -> dict:
             "status": row["status"] if row["status"] != "implemented" else mode_status,
             "skill_status": row["status"],
             "mode": mode,
+            "mode_scope": mode_scope.get(mode),
             "matched_terms": hits,
             "rationale": f"请求包含与 {name} 责任范围相符的词语。",
         })
@@ -71,6 +73,6 @@ def route(request: str, root: str | Path | None = None) -> dict:
 
 def list_skills(root: str | Path | None = None) -> list[dict]:
     return [
-        {key: row[key] for key in ("name", "path", "kind", "status", "modes", "dependencies")}
+        {key: row[key] for key in ("name", "path", "kind", "status", "modes", "dependencies", "mode_scope") if key in row}
         for row in load_registry(root)
     ]

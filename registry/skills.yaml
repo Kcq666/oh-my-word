@@ -13,6 +13,14 @@ skills:
     kind: business
     status: implemented
     modes: [technical-report, design-spec, requirements-spec, interface-spec, test-report, user-manual, operations-manual]
+    mode_scope:
+      technical-report: focused
+      design-spec: focused
+      requirements-spec: baseline
+      interface-spec: baseline
+      test-report: baseline
+      user-manual: baseline
+      operations-manual: baseline
     dependencies: [word-document]
     evidence: [tests/test_pipeline.py, tests/test_technology_modes.py]
   - name: oh-my-patent

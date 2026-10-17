@@ -1,25 +1,57 @@
 {
   "schema_version": 1,
-  "recorded_on": "2026-10-15",
+  "recorded_on": "2026-10-17",
   "scope": "Sources actually adapted into this repository and direct runtime packages exercised in the local acceptance environment. Research candidates are recorded separately in docs/upstream-sources.json.",
   "adapted_sources": [
     {
       "repository": "Fokkyp/SoftwareCopyright-Skill",
-      "commit": "947d5963194bfda8ce57b8b454b486f13359dee4",
+      "commit": "e78f746e0254ed4be7e9a561ce0acc7180d5370a",
       "license": "MIT",
-      "source_files": ["software-copyright-materials/SKILL.md", "software-copyright-materials/scripts/extract_code_material.py"],
+      "source_files": [
+        "software-copyright-materials/SKILL.md",
+        "software-copyright-materials/scripts/common.py",
+        "software-copyright-materials/scripts/analyze_project.py",
+        "software-copyright-materials/scripts/generate_business_context.py",
+        "software-copyright-materials/scripts/propose_code_selection.py",
+        "software-copyright-materials/scripts/extract_code_material.py",
+        "software-copyright-materials/scripts/generate_manual_draft.py",
+        "software-copyright-materials/scripts/generate_application_info.py",
+        "software-copyright-materials/scripts/confirm_stage.py",
+        "software-copyright-materials/scripts/capture_screenshots.py",
+        "software-copyright-materials/references/business_understanding_rules.md",
+        "software-copyright-materials/references/code_selection_rules.md",
+        "software-copyright-materials/references/copyright_material_rules.md",
+        "software-copyright-materials/references/manual_structure.md",
+        "software-copyright-materials/references/application_fields.md",
+        "LICENSE"
+      ],
       "license_file": "third_party/licenses/fokkyp-MIT.txt",
-      "destination_files": ["word_skills/copyright.py", "skills/oh-my-copyright/SKILL.md"],
-      "adaptation": "Applied source selection, file/line provenance and manual evidence boundaries; no OfficeCLI or upstream executable code copied.",
-      "verification": "Pinned tree and LICENSE reviewed; local source-hash, range and exclusion tests pass."
+      "destination_files": [
+        "word_skills/_vendor/fokkyp/",
+        "word_skills/copyright_workflow.py",
+        "word_skills/copyright_manual.py",
+        "word_skills/copyright.py",
+        "word_skills/copyright_package.py",
+        "skills/oh-my-copyright/"
+      ],
+      "adaptation": "Directly vendored unmodified stage scripts and references; thin isolated adapter preserves local credential/path safeguards, unknown facts, CLI wording, honest related-documents, current confirmations and the shared Word renderer. OfficeCLI and estimated source pagination are not used for final generation.",
+      "verification": "Pinned bytes checked by tests/test_copyright_workflow.py; workflow stages exercised on real OKS and isolated fixtures; reuse scope in docs/05-fokkyp-reuse.md. Runtime logs and applicant materials are not distributed.",
+      "version": "2.6",
+      "vendor_manifest": "word_skills/_vendor/fokkyp/UPSTREAM.json"
     },
     {
       "repository": "suling-fun/software-copyright-materials-skill",
       "commit": "d7b49eea8f6e455ef3547c0d16d1945e204bc8a7",
       "license": "MIT",
-      "source_files": ["SKILL.md", "verify_materials.py"],
+      "source_files": [
+        "SKILL.md",
+        "verify_materials.py"
+      ],
       "license_file": "third_party/licenses/suling-MIT.txt",
-      "destination_files": ["word_skills/copyright.py", "tests/test_copyright.py"],
+      "destination_files": [
+        "word_skills/copyright.py",
+        "tests/test_copyright.py"
+      ],
       "adaptation": "Applied the separation between mechanical material checks and human semantic review; no upstream verifier or blacklist copied.",
       "verification": "Pinned tree and LICENSE reviewed; credential exclusion and source-change regression tests pass."
     },
@@ -27,9 +59,15 @@
       "repository": "caolonghao/nsfc-grant-assistant-skill",
       "commit": "a694ab4cfbf8bad64357c6803e5f39c4b0eda47a",
       "license": "MIT",
-      "source_files": ["ndrc-bid-assistant/", "LICENSE"],
+      "source_files": [
+        "ndrc-bid-assistant/",
+        "LICENSE"
+      ],
       "license_file": "third_party/licenses/nsfc-grant-assistant-MIT.txt",
-      "destination_files": ["word_skills/proposal.py", "skills/oh-my-proposal/SKILL.md"],
+      "destination_files": [
+        "word_skills/proposal.py",
+        "skills/oh-my-proposal/SKILL.md"
+      ],
       "adaptation": "Applied channel and guide evidence before drafting; no upstream reviewer model or Agent orchestration copied.",
       "verification": "Pinned tree and LICENSE reviewed; requirement quote, trace and budget tests pass."
     },
@@ -37,9 +75,13 @@
       "repository": "Fenng/Tech-Doc-Style-Chinese",
       "commit": "b119d01c9bb7cd132b3c62fafdff34227c4410d1",
       "license": "MIT",
-      "source_files": ["SKILL.md"],
+      "source_files": [
+        "SKILL.md"
+      ],
       "license_file": "third_party/licenses/fenng-MIT.txt",
-      "destination_files": ["shared/references/chinese-writing.md"],
+      "destination_files": [
+        "shared/references/chinese-writing.md"
+      ],
       "adaptation": "Selected fact-preservation, terminology-consistency and literal identifier guidance; omitted personal punctuation preferences.",
       "verification": "Destination and attribution reviewed; no upstream executable code imported."
     },
@@ -47,25 +89,73 @@
       "repository": "riekelt/technical-writer",
       "commit": "85e53729dd959a2795d593d6769068e342cf3486",
       "license": "MIT",
-      "source_files": ["plugins/technical-writer/skills/writing-design-docs/SKILL.md"],
+      "source_files": [
+        "plugins/technical-writer/skills/writing-design-docs/SKILL.md"
+      ],
       "license_file": "third_party/licenses/technical-writer-MIT.txt",
-      "destination_files": ["skills/oh-my-technology/references/design-spec.md"],
+      "destination_files": [
+        "skills/oh-my-technology/references/design-spec.md"
+      ],
       "adaptation": "Condensed the distinction between observed facts and proposals, and the review of choices, costs and residual risks; did not adopt English style constraints.",
       "verification": "Destination and attribution reviewed; no upstream executable code imported."
     }
   ],
   "runtime_packages": [
-    {"package": "python-docx", "role": "required", "tested_version": "1.2.0"},
-    {"package": "PyYAML", "role": "required", "tested_version": "6.0.3"},
-    {"package": "pdfplumber", "role": "required", "tested_version": "0.11.9"},
-    {"package": "pypdf", "role": "required", "tested_version": "6.10.0"},
-    {"package": "defusedxml", "role": "required", "tested_version": "0.7.1"},
-    {"package": "markitdown", "role": "optional-ingest", "tested_version": "0.1.8"},
-    {"package": "mammoth", "role": "optional-ingest", "tested_version": "1.11.0"},
-    {"package": "markdownify", "role": "optional-ingest", "tested_version": "1.2.3"},
-    {"package": "python-pptx", "role": "optional-ingest", "tested_version": "1.0.2"},
-    {"package": "docxtpl", "role": "optional-templates", "tested_version": "0.20.2"},
-    {"package": "docxcompose", "role": "optional-templates", "tested_version": "1.4.1"}
+    {
+      "package": "python-docx",
+      "role": "required",
+      "tested_version": "1.2.0"
+    },
+    {
+      "package": "PyYAML",
+      "role": "required",
+      "tested_version": "6.0.3"
+    },
+    {
+      "package": "pdfplumber",
+      "role": "required",
+      "tested_version": "0.11.9"
+    },
+    {
+      "package": "pypdf",
+      "role": "required",
+      "tested_version": "6.10.0"
+    },
+    {
+      "package": "defusedxml",
+      "role": "required",
+      "tested_version": "0.7.1"
+    },
+    {
+      "package": "markitdown",
+      "role": "optional-ingest",
+      "tested_version": "0.1.8"
+    },
+    {
+      "package": "mammoth",
+      "role": "optional-ingest",
+      "tested_version": "1.11.0"
+    },
+    {
+      "package": "markdownify",
+      "role": "optional-ingest",
+      "tested_version": "1.2.3"
+    },
+    {
+      "package": "python-pptx",
+      "role": "optional-ingest",
+      "tested_version": "1.0.2"
+    },
+    {
+      "package": "docxtpl",
+      "role": "optional-templates",
+      "tested_version": "0.20.2"
+    },
+    {
+      "package": "docxcompose",
+      "role": "optional-templates",
+      "tested_version": "1.4.1"
+    }
   ],
   "notes": "Package versions are an acceptance snapshot, not a transitive dependency lock or a claim that upstream repository commits correspond to the installed distributions. Installation constraints remain in pyproject.toml. No fonts or external office converters are bundled."
 }

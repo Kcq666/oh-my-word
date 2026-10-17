@@ -1,0 +1,32 @@
+# Fokkyp 软著流程直接复用
+
+更新：2026-10-17。当前固定 [2.6 e78f746e0254ed4be7e9a561ce0acc7180d5370a](https://github.com/Fokkyp/SoftwareCopyright-Skill/tree/e78f746e0254ed4be7e9a561ce0acc7180d5370a)，MIT。此前2.5仅改编流程；本轮根据用户要求改为实际复用阶段脚本。完整许可证保留在 third_party/licenses/fokkyp-MIT.txt 及 vendor/LICENSE。
+
+## 直接复用
+
+word_skills/_vendor/fokkyp 保留16份上游原件，UPSTREAM.json记录源提交、相对路径及SHA256；原件不打补丁。9个脚本为 common、analyze_project、generate_business_context、propose_code_selection、extract_code_material、generate_manual_draft、generate_application_info、confirm_stage、capture_screenshots。extract_code_material仅作为上游候选脚本的依赖，不用于最终源码分页。另保留原SKILL及五份阶段参考。不引入OfficeCLI、安装器、截图浏览器或上游生成demo。
+
+copyright prepare直接执行上游analyze→business证据收集→candidates。copyright workflow提供business/model-context、manual、fields、confirm、screenshots等原脚本入口。copyright select --workflow-selection导入同一份候选选择，绑定本地原件哈希，避免重复选择。源码选择按完整文件投影；原接口仍支持显式原始行段摘录。
+
+## 适配位置与原因
+
+| 位置 | 适配 | 原因 |
+|---|---|---|
+| copyright_workflow.py | 隔离子进程调用；上游发现时叠加本地凭据、目录、符号链接排除 | 防止脚本模块污染及私人材料进入公开输出 |
+| copyright.py | 未知扩展名调用上游内容识别；已知语言保留原哈希/编码/行数契约 | 复用新语言候选发现而不重写扫描器 |
+| workflow manual --interface cli | 通过句式钩子适配终端；不替换命令标识；CLI不沿用390字页面段落下限 | CLI没有按钮和页面导航；短命令不应凑字 |
+| workflow manual | 没有真实配套文档时不填“总体设计/详细设计/测试案例” | 上游缺省值不是项目事实 |
+| workflow fields | 未提供的开发方式、权利基础、环境保留待确认 | 本机配置与软件开发环境不能等同 |
+| workflow manual/fields --preview | 允许继续起草但不写用户确认；正常生成检查确认内容哈希 | 已有用户授权继续执行，未知事实仍不能伪造 |
+| copyright_manual.py | 用markdown-it-py保留章节、表格、命令块和已声明图片 | 旧适配把手册降成纯段落，无法呈现操作结果 |
+| render/delivery/evidence | 同一Word后端插图、图片审计复制与校验、软件页眉 | 不再引入第二套生成器；图文与正文一起交付 |
+
+原始SKILL是溯源资料，不是另一个并行入口；实际指令以skills/oh-my-copyright为准。上游建议字数、V1.0习惯与软件字段枚举须结合当期官网核对，不能作为登记资格认证。已在会话中确认的项目、软件名和执行授权不重复索取；真正缺失的权属和日期不代填。
+
+## 验证与限制
+
+专项测试实际调用上游脚本，检查未知扩展名、WPS资料登记、凭据排除、确认过期、字段留空、图片/表格入Word及图片篡改。固定OKS实例保留模型稿、上游生成草稿、自检记录、原始运行日志来源与图文交付。可运行 `python -m pytest tests/test_copyright_workflow.py tests/test_copyright_package.py` 及 `python tools/check_word_skills.py` 复核。实际申请材料、运行日志及本机路径不纳入源码。
+
+上游自检是启发式规则，不是独立语义审查；多条round记录不等于多次人工评审。源码候选里的估计页数仅帮助选材，最终交存页数和行数须从实际产物核对；CLI日志排成图必须标注实际输出排版，不能称为原生终端截图。GUI自动截图仍使用调用环境已有工具，本轮没有新接入浏览器自动截图器或安装依赖。
+
+OKS软件名已获用户确认：开知智能体知识与记忆管理系统，简称OKS，版本V0.6.23。权利人、完成日期、开发方式等仍未知。运行代码与依赖链接不为规避审查而修改。

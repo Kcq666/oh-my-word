@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "word-skills"
-version = "0.2.0"
+version = "0.3.0"
 description = "Evidence-bound Chinese technical documents, Word delivery, and a compatible patent workflow."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -18,11 +18,12 @@ classifiers = [
     "Topic :: Office/Business :: Office Suites",
 ]
 dependencies = [
-    "python-docx>=1.1.0",
+    "python-docx>=1.2.0",
     "PyYAML>=6.0",
     "pdfplumber>=0.11.9",
     "pypdf>=6",
     "defusedxml>=0.7",
+    "markdown-it-py>=3,<5",
 ]
 
 [project.optional-dependencies]
@@ -56,3 +57,4 @@ include = ["oh_my_patent*", "word_skills*"]
 
 [tool.setuptools.package-data]
 word_skills = ["schemas/*.yaml", "data/*.yaml", "data/proposal-profiles/*.yaml"]
+"word_skills._vendor.fokkyp" = ["LICENSE", "UPSTREAM.json", "SKILL.md", "references/*.md"]

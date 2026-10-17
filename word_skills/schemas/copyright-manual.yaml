@@ -1,0 +1,7 @@
+schema_version: 1
+mode: copyright-manual
+title: 软件操作说明书
+business_gate: copyright
+required_sections:
+  identity: 申请人声明与材料范围
+  manual: 功能与操作说明

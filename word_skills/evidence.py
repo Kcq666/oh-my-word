@@ -108,9 +108,16 @@ def validate(draft, case):
             if not bid or bid in block_ids:
                 issues.append(finding("BLOCK_ID", "Missing or duplicate block ID", location=sid))
             block_ids.add(bid)
-            if block.get("type") not in {"paragraph", "table", "code"}:
-                issues.append(finding("BLOCK_TYPE", "Supported types: paragraph/table/code", location=bid))
+            if block.get("type") not in {"paragraph", "table", "code", "image"}:
+                issues.append(finding("BLOCK_TYPE", "Supported types: paragraph/table/code/image", location=bid))
                 continue
+            if block.get("type") == "image":
+                try:
+                    image = inside(case, block.get("path", ""))
+                    if image.suffix.lower() not in {".png", ".jpg", ".jpeg"} or sha256(image) != block.get("sha256"):
+                        raise ValueError("missing or changed image")
+                except (ValueError, OSError):
+                    issues.append(finding("IMAGE_SOURCE", "Image must match a local audited PNG/JPEG", location=bid))
             text = block_text(block)
             if not text.strip():
                 issues.append(finding("EMPTY_BLOCK", "Empty body block", location=bid))

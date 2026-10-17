@@ -6,7 +6,7 @@ import shutil
 from .common import digest, finding, read_json, sha256, write_json
 
 
-def bind_business_audit(output, kind, source, validation, extra_files=(), *, source_bytes=None):
+def bind_business_audit(output, kind, source, validation, extra_files=(), *, source_bytes=None, extra_hashes=None):
     output = Path(output).resolve()
     source = Path(source).resolve()
     manifest = read_json(output / "manifest.json")
@@ -33,6 +33,15 @@ def bind_business_audit(output, kind, source, validation, extra_files=(), *, sou
     for number, source_file in enumerate(extra_files):
         name = f"business-attachment-{number}{Path(source_file).suffix}"
         shutil.copyfile(source_file, audit / name)
+        if extra_hashes is not None and sha256(audit / name) != extra_hashes.get(str(Path(source_file).resolve())):
+            common_validation = read_json(audit / "validation.json")
+            common_validation["issues"].append(finding("BUSINESS_ATTACHMENT_CHANGED", "Attachment changed after validation; rebuild"))
+            common_validation["passed"] = False
+            write_json(audit / "validation.json", common_validation)
+            manifest["outputs"]["audit/validation.json"] = sha256(audit / "validation.json")
+            manifest["state"] = "failed"
+            write_json(output / "manifest.json", manifest)
+            return manifest
         manifest["inputs"][f"audit/{name}"] = sha256(audit / name)
     if sha256(source) != expected:
         common_validation = read_json(audit / "validation.json")

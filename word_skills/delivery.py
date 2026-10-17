@@ -42,6 +42,9 @@ def build(draft_path, case, output, template=None, template_mode="style", soffic
     manifest = {"schema_version": 1, "created_at": now(), "state": "blocked", "mode": draft["mode"],
                 "code_identity": code_identity(), "versions": versions(), "template_mode": template_mode if template else None,
                 "business_gate": required_gate, "inputs": {}, "outputs": {}, "review": "not performed"}
+    for key in ("case_id", "document_id"):
+        if key in draft:
+            manifest[key] = draft[key]
     # Keep an auditable, portable snapshot; never mutate the input case or draft.
     shutil.copyfile(draft_path, audit / "draft.json")
     for name in ("source-index.json", "evidence.json"):
@@ -51,6 +54,16 @@ def build(draft_path, case, output, template=None, template_mode="style", soffic
             dest = inside(audit, source[key])
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(inside(case, source[key]), dest)
+    if validation["passed"]:
+        for section in draft["sections"]:
+            for block in section["blocks"]:
+                if block["type"] == "image":
+                    source = inside(case, block["path"])
+                    dest = inside(audit, block["path"])
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(source, dest)
+                    if sha256(dest) != block["sha256"]:
+                        raise ValueError("Image changed after validation; rebuild")
     if template:
         shutil.copyfile(template, audit / "reference.docx")
     for p in audit.rglob("*"):
@@ -60,7 +73,7 @@ def build(draft_path, case, output, template=None, template_mode="style", soffic
         write_json(output / "manifest.json", manifest)
         return manifest
     try:
-        profile = render(draft, output / "output.docx", template, template_mode)
+        profile = render(draft, output / "output.docx", template, template_mode, asset_root=audit)
         actual_profile = fingerprint(output / "output.docx")
         write_json(audit / "template_profile.json", {"reference": profile, "actual": actual_profile})
         validation["issues"] += inspect_docx(output / "output.docx", draft)

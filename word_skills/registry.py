@@ -15,6 +15,7 @@ import yaml
 _NAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 _STATES = {"implemented", "planned", "deprecated"}
 _KINDS = {"router", "business", "production"}
+_MODE_SCOPES = {"focused", "baseline"}
 
 
 def registry_path(root: str | Path | None = None) -> Path:
@@ -55,6 +56,13 @@ def load_registry(root: str | Path | None = None) -> list[dict]:
             raise ValueError(f"{name}: invalid kind")
         if not isinstance(row.get("modes"), list) or not row["modes"] or any(not isinstance(x, str) for x in row["modes"]):
             raise ValueError(f"{name}: modes must be a nonempty string list")
+        scope = row.get("mode_scope")
+        if scope is not None and (
+            not isinstance(scope, dict)
+            or set(scope) != set(row["modes"])
+            or any(value not in _MODE_SCOPES for value in scope.values())
+        ):
+            raise ValueError(f"{name}: mode_scope must classify every mode as focused or baseline")
         deps = row.get("dependencies", [])
         if not isinstance(deps, list) or any(not isinstance(x, str) for x in deps):
             raise ValueError(f"{name}: dependencies must be a string list")
